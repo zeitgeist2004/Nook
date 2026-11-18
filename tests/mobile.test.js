@@ -240,7 +240,7 @@ assert(editorCode.includes('if (isMobile)'), 'Editor deve ter estado vazio dedic
 assert(editorCode.includes('t.editor.newNoteMobile') && ptLocaleCode.includes('Nova Anotação'), 'Editor mobile deve exibir botão de Nova Anotação em toque');
 
 const commandPaletteCode = fs.readFileSync(path.join(rootDir, 'src', 'components', 'search', 'CommandPalette.tsx'), 'utf-8');
-assert(commandPaletteCode.includes('isMobile\n    ? []'), 'CommandPalette no mobile não deve poluir com atalhos de comando desktop');
+assert(commandPaletteCode.replace(/\r\n/g, '\n').includes('isMobile\n    ? []'), 'CommandPalette no mobile não deve poluir com atalhos de comando desktop');
 assert(commandPaletteCode.includes('!isMobile && ('), 'Rodapé de atalhos de navegação de teclado não deve ser exibido no mobile');
 console.log('✓ Teste 16: Telas de atalhos e comandos de teclado suprimidos com sucesso no mobile.');
 

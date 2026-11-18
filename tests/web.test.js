@@ -188,7 +188,7 @@ assert(themeCss.includes('--primary: #00FF9D') && themeCss.includes('--accent: #
 assert(themeCss.includes('--secondary-foreground: #00FF9D') || themeCss.includes('--text-secondary: #00FF9D'), 'Cor secundária do Neon deve ser verde (#00FF9D) e não azul');
 assert(themeCss.includes('[data-theme="sakura"]'), 'Tema sakura deve estar definido em theme.css');
 assert(appSrc.includes("api.saveSetting('theme'") && appSrc.includes("api.getSettings()"), 'App.tsx deve salvar e ler tema no backend para aplicar no Nook Web');
-assert(appSrc.includes('if (showSplash) {\n    return <SplashScreen'), 'App.tsx deve renderizar apenas a splash isolada sem vazar componentes ao fundo');
+assert(appSrc.replace(/\r\n/g, '\n').includes('if (showSplash) {\n    return <SplashScreen'), 'App.tsx deve renderizar apenas a splash isolada sem vazar componentes ao fundo');
 console.log('✓ Teste 19: Sistema de 5 temas (Neon verde, Sakura sem subtítulo) e sync no Nook Web validados com sucesso.');
 
 // 20. Validar Correções de Segurança, WebSocket Mobile, Coleções em Tempo Real e Watermark de Conflito
