@@ -1,5 +1,7 @@
 import React, { useMemo, useEffect, useRef } from 'react';
 import { renderMarkdownToHtml, toggleTaskCheckbox } from '../../utils/markdownParser';
+import { ParagraphSpacing, ReadingWidth } from '../../types';
+import { useTranslation } from '../../i18n';
 
 interface MarkdownViewerProps {
   content: string;
@@ -7,7 +9,16 @@ interface MarkdownViewerProps {
   onNavigateWikilink?: (targetName: string) => void;
   fontSize?: number;
   fontFamily?: string;
+  lineHeight?: number;
+  readingWidth?: ReadingWidth;
+  paragraphSpacing?: ParagraphSpacing;
 }
+
+const PARAGRAPH_GAP_MAP: Record<ParagraphSpacing, string> = {
+  compact: '0.78em',
+  comfortable: '1.05em',
+  airy: '1.36em',
+};
 
 export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
   content,
@@ -15,7 +26,11 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
   onNavigateWikilink,
   fontSize = 15,
   fontFamily = "'Inter', sans-serif",
+  lineHeight = 1.65,
+  readingWidth = 'comfortable',
+  paragraphSpacing = 'comfortable',
 }) => {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Render markdown with memoization
@@ -56,13 +71,14 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
     const copyBtn = target.closest('.nook-code-copy-btn, .lumina-code-copy-btn') as HTMLElement | null;
     if (copyBtn) {
       e.preventDefault();
-      const codeBlock = copyBtn.parentElement?.querySelector('code');
+      const wrapperEl = copyBtn.closest('.nook-code-wrapper, .lumina-code-wrapper');
+      const codeBlock = wrapperEl?.querySelector('code');
       if (codeBlock) {
         navigator.clipboard.writeText(codeBlock.innerText || '');
-        copyBtn.innerText = 'Copiado!';
+        copyBtn.innerText = t.common.copiedExclamation;
         copyBtn.classList.add('copied');
         setTimeout(() => {
-          copyBtn.innerText = 'Copiar';
+          copyBtn.innerText = t.editor.copyCode;
           copyBtn.classList.remove('copied');
         }, 1500);
       }
@@ -70,26 +86,55 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
     }
   };
 
-  // Enhance code blocks with copy buttons after render
+  // Enhance code blocks with language header bar & copy button after render (syncing on language switch)
   useEffect(() => {
     if (!containerRef.current) return;
     const preElements = containerRef.current.querySelectorAll('pre');
     preElements.forEach((pre) => {
-      if (pre.parentElement?.classList.contains('nook-code-wrapper') || pre.parentElement?.classList.contains('lumina-code-wrapper')) return;
+      const codeEl = pre.querySelector('code');
+      const langMatch = codeEl?.className.match(/language-([\w+#.-]+)/i);
+      const langLabel = (langMatch?.[1] || t.editor.codeLabel).toLowerCase();
+
+      const existingWrapper = pre.parentElement;
+      if (
+        existingWrapper?.classList.contains('nook-code-wrapper') ||
+        existingWrapper?.classList.contains('lumina-code-wrapper')
+      ) {
+        const existingLang = existingWrapper.querySelector('.nook-code-lang') as HTMLElement | null;
+        if (existingLang && !langMatch) {
+          existingLang.innerText = t.editor.codeLabel;
+        }
+        const existingBtn = existingWrapper.querySelector('.nook-code-copy-btn') as HTMLButtonElement | null;
+        if (existingBtn && !existingBtn.classList.contains('copied')) {
+          existingBtn.title = t.editor.copyCodeTitle;
+          existingBtn.innerText = t.editor.copyCode;
+        }
+        return;
+      }
 
       const wrapper = document.createElement('div');
       wrapper.className = 'nook-code-wrapper lumina-code-wrapper';
       pre.parentNode?.insertBefore(wrapper, pre);
-      wrapper.appendChild(pre);
+
+      const header = document.createElement('div');
+      header.className = 'nook-code-header';
+
+      const langBadge = document.createElement('span');
+      langBadge.className = 'nook-code-lang';
+      langBadge.innerText = langLabel;
 
       const copyBtn = document.createElement('button');
       copyBtn.className = 'nook-code-copy-btn lumina-code-copy-btn';
       copyBtn.type = 'button';
-      copyBtn.title = 'Copiar código';
-      copyBtn.innerText = 'Copiar';
-      wrapper.appendChild(copyBtn);
+      copyBtn.title = t.editor.copyCodeTitle;
+      copyBtn.innerText = t.editor.copyCode;
+
+      header.appendChild(langBadge);
+      header.appendChild(copyBtn);
+      wrapper.appendChild(header);
+      wrapper.appendChild(pre);
     });
-  }, [html]);
+  }, [html, t.editor.copyCode, t.editor.copyCodeTitle, t.editor.codeLabel]);
 
   return (
     <div
@@ -100,9 +145,10 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
         overflowY: 'auto',
         fontFamily: fontFamily,
         fontSize: `${fontSize}px`,
-        lineHeight: 1.7,
+        lineHeight,
         color: 'var(--text-primary)',
         padding: '12px 0 60px 0',
+        ['--nook-paragraph-gap' as string]: PARAGRAPH_GAP_MAP[paragraphSpacing] || '1.05em',
       }}
       className="markdown-reading-scroller"
     >
@@ -114,7 +160,7 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
           padding: '0 40px',
           boxSizing: 'border-box',
         }}
-        className="markdown-reading-content"
+        className={`markdown-reading-content nook-measure-${readingWidth}`}
       >
         {/* Frontmatter / Properties Card (Obsidian / Lark Style) */}
         {hasProperties && (

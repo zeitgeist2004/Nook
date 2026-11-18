@@ -11,11 +11,20 @@ import {
   Pin,
   FileText,
   X,
+  Heart,
+  HelpCircle,
 } from 'lucide-react';
-import { Collection, NoteSummary } from '../../types';
+import { Collection, DevProjectsConfigMap, NoteSummary } from '../../types';
 import { ProjectTree } from './ProjectTree';
 import { QuickNotesList } from './QuickNotesList';
 import { Tooltip } from '../ui/Tooltip';
+import { ContextualHint } from '../ui/ContextualHint';
+import { api } from '../../services/api';
+import { useTranslation } from '../../i18n';
+
+function formatMessageSafe(template: string, version: string): string {
+  return template.replace('{version}', version);
+}
 
 interface SidebarProps {
   collections: Collection[];
@@ -31,11 +40,18 @@ interface SidebarProps {
   onOpenCommandPalette: () => void;
   onOpenSettings: () => void;
   onOpenTrash: () => void;
+  onOpenSupport?: () => void;
+  onOpenHelp?: () => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   onImportFile?: (file: File, collectionId?: string | null) => void;
   onReorderCollections?: (orderedIds: string[]) => void;
+  devWorkflowEnabled?: boolean;
+  devProjectsConfig?: DevProjectsConfigMap;
+  onOpenProjectTools?: (collectionId: string) => void;
   isMobile?: boolean;
+  hasAvailableUpdate?: boolean;
+  availableUpdateVersion?: string | null;
 }
 
 const SidebarComponent: React.FC<SidebarProps> = ({
@@ -52,12 +68,20 @@ const SidebarComponent: React.FC<SidebarProps> = ({
   onOpenCommandPalette,
   onOpenSettings,
   onOpenTrash,
+  onOpenSupport,
+  onOpenHelp,
   isCollapsed,
   onToggleCollapse,
   onImportFile,
   onReorderCollections,
+  devWorkflowEnabled = false,
+  devProjectsConfig,
+  onOpenProjectTools,
   isMobile = false,
+  hasAvailableUpdate = false,
+  availableUpdateVersion = null,
 }) => {
+  const { t } = useTranslation();
   const [width, setWidth] = useState<number>(() => {
     const saved = localStorage.getItem('nook_sidebar_width') || localStorage.getItem('lumina_sidebar_width');
     return saved ? parseInt(saved, 10) : 260;
@@ -104,9 +128,10 @@ const SidebarComponent: React.FC<SidebarProps> = ({
           gap: '12px',
         }}
       >
-        <Tooltip content="Expandir barra lateral" shortcut="Ctrl+B" position="right">
+        <Tooltip content={t.sidebar.expandSidebar} shortcut="Ctrl+B" position="right">
           <button
             onClick={onToggleCollapse}
+            aria-label={t.sidebar.expandSidebar}
             style={{
               padding: '8px',
               borderRadius: 'var(--radius-sm)',
@@ -119,7 +144,7 @@ const SidebarComponent: React.FC<SidebarProps> = ({
           </button>
         </Tooltip>
 
-        <Tooltip content="Nova nota rápida" shortcut="Ctrl+N" position="right">
+        <Tooltip content={t.sidebar.newQuickNoteTooltip} shortcut="Ctrl+N" position="right">
           <button
             onClick={onCreateQuickNote}
             style={{
@@ -133,7 +158,7 @@ const SidebarComponent: React.FC<SidebarProps> = ({
           </button>
         </Tooltip>
 
-        <Tooltip content="Buscar ou comandos" shortcut="Ctrl+K" position="right">
+        <Tooltip content={t.sidebar.searchOrCommands} shortcut="Ctrl+K" position="right">
           <button
             onClick={onOpenCommandPalette}
             style={{
@@ -150,7 +175,7 @@ const SidebarComponent: React.FC<SidebarProps> = ({
 
         <div style={{ flex: 1 }} />
 
-        <Tooltip content="Configurações" shortcut="Ctrl+," position="right">
+        <Tooltip content={t.common.settings} shortcut="Ctrl+," position="right">
           <button
             onClick={onOpenSettings}
             style={{
@@ -171,8 +196,10 @@ const SidebarComponent: React.FC<SidebarProps> = ({
   return (
     <div
       style={{
-        width: isMobile ? '100%' : `${width}px`,
+        width: isMobile ? '100%' : `min(${width}px, 36vw)`,
+        minWidth: isMobile ? undefined : '200px',
         height: '100%',
+        paddingTop: isMobile ? 'env(safe-area-inset-top, 0px)' : 0,
         backgroundColor: 'var(--bg-sidebar)',
         borderRight: isMobile ? 'none' : '1px solid var(--border-color)',
         display: 'flex',
@@ -224,14 +251,15 @@ const SidebarComponent: React.FC<SidebarProps> = ({
                 cursor: 'pointer',
                 touchAction: 'manipulation',
               }}
-              aria-label="Fechar menu"
+              aria-label={t.sidebar.closeMenu}
             >
               <X size={20} />
             </button>
           ) : (
-            <Tooltip content="Recolher barra lateral" shortcut="Ctrl+B" position="bottom">
+            <Tooltip content={t.sidebar.collapseSidebar} shortcut="Ctrl+B" position="bottom">
               <button
                 onClick={onToggleCollapse}
+                aria-label={t.sidebar.collapseSidebar}
                 style={{
                   padding: '6px',
                   borderRadius: 'var(--radius-sm)',
@@ -274,7 +302,7 @@ const SidebarComponent: React.FC<SidebarProps> = ({
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
             <Search size={14} />
-            <span>{isMobile ? 'Buscar notas...' : 'Buscar ou comandos...'}</span>
+            <span>{isMobile ? t.sidebar.searchNotes : t.sidebar.searchOrCommands}</span>
           </div>
           {!isMobile && (
             <kbd
@@ -292,7 +320,7 @@ const SidebarComponent: React.FC<SidebarProps> = ({
 
       {/* Quick Actions (Nova nota / Novo projeto) */}
       <div style={{ padding: '6px 12px', display: 'flex', gap: '6px' }}>
-        <Tooltip content="Nova nota rápida" shortcut="Ctrl+N" position="bottom">
+        <Tooltip content={t.sidebar.newQuickNoteTooltip} shortcut="Ctrl+N" position="bottom">
           <button
             onClick={onCreateQuickNote}
             style={{
@@ -314,11 +342,11 @@ const SidebarComponent: React.FC<SidebarProps> = ({
             onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
           >
             <FilePlus size={14} />
-            Nova Nota
+            {t.sidebar.newNote}
           </button>
         </Tooltip>
 
-        <Tooltip content="Criar novo projeto" position="bottom">
+        <Tooltip content={t.sidebar.createNewProject} position="bottom">
           <button
             onClick={onCreateProjectPrompt}
             style={{
@@ -376,7 +404,7 @@ const SidebarComponent: React.FC<SidebarProps> = ({
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <Pin size={12} />
-                <span>Fixadas</span>
+                <span>{t.sidebar.pinned}</span>
               </div>
               <span style={{ fontSize: '10px' }}>{pinnedNotes.length}</span>
             </div>
@@ -411,7 +439,7 @@ const SidebarComponent: React.FC<SidebarProps> = ({
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
                       <FileText size={14} style={{ flexShrink: 0, opacity: 0.7 }} />
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {note.title || 'Sem título'}
+                        {note.title || t.common.untitled}
                       </span>
                     </div>
                     <Pin size={11} style={{ opacity: 0.5, flexShrink: 0 }} />
@@ -484,7 +512,7 @@ const SidebarComponent: React.FC<SidebarProps> = ({
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span>Notas Rápidas</span>
+              <span>{t.sidebar.quickNotes}</span>
               {isQuickNotesDragOver && (
                 <span
                   style={{
@@ -498,7 +526,7 @@ const SidebarComponent: React.FC<SidebarProps> = ({
                     letterSpacing: 'normal',
                   }}
                 >
-                  + Soltar aqui
+                  {t.sidebar.dropHere}
                 </span>
               )}
             </div>
@@ -512,6 +540,7 @@ const SidebarComponent: React.FC<SidebarProps> = ({
             activeNoteId={activeNoteId}
             onSelectNote={onSelectNote}
             onOpenContextMenu={onOpenContextMenu}
+            isMobile={isMobile}
           />
         </div>
 
@@ -537,11 +566,12 @@ const SidebarComponent: React.FC<SidebarProps> = ({
               justifyContent: 'space-between',
             }}
           >
-            <span>Projetos</span>
-            <Tooltip content="Criar novo projeto" position="top">
+            <span>{t.sidebar.projects}</span>
+            <Tooltip content={t.sidebar.createNewProject} position="top" disabled={isMobile}>
               <button
                 onClick={onCreateProjectPrompt}
-                style={{ padding: '2px', color: 'var(--text-muted)', borderRadius: '3px' }}
+                aria-label={t.sidebar.createNewProject}
+                style={{ padding: isMobile ? '6px' : '2px', color: 'var(--text-muted)', borderRadius: '3px' }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
                 onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
               >
@@ -549,6 +579,17 @@ const SidebarComponent: React.FC<SidebarProps> = ({
               </button>
             </Tooltip>
           </div>
+
+          {collections.length > 0 && (
+            <div style={{ padding: '2px 8px 6px 8px' }}>
+              <ContextualHint
+                tipId="projects"
+                title={t.ux.tipProjectsTitle}
+                description={t.ux.tipProjectsDesc}
+                compact
+              />
+            </div>
+          )}
 
           <ProjectTree
             collections={collections}
@@ -561,6 +602,10 @@ const SidebarComponent: React.FC<SidebarProps> = ({
             onMoveNote={onMoveNote}
             onImportFile={onImportFile}
             onReorderCollections={onReorderCollections}
+            devWorkflowEnabled={devWorkflowEnabled}
+            devProjectsConfig={devProjectsConfig}
+            onOpenProjectTools={onOpenProjectTools}
+            isMobile={isMobile}
           />
         </div>
       </div>
@@ -568,14 +613,16 @@ const SidebarComponent: React.FC<SidebarProps> = ({
       {/* Footer */}
       <div
         style={{
-          padding: '8px 12px',
+          padding: isMobile
+            ? '8px 12px max(10px, env(safe-area-inset-bottom, 10px)) 12px'
+            : '8px 12px',
           borderTop: '1px solid var(--border-subtle)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
         }}
       >
-        <Tooltip content="Abrir lixeira" position="top">
+        <Tooltip content={t.sidebar.openTrash} position="top">
           <button
             onClick={onOpenTrash}
             style={{
@@ -586,29 +633,119 @@ const SidebarComponent: React.FC<SidebarProps> = ({
               color: 'var(--text-muted)',
               padding: '4px 6px',
               borderRadius: 'var(--radius-sm)',
+              flexShrink: 0,
             }}
             onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
             onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
           >
             <Trash2 size={14} />
-            <span>Lixeira</span>
+            <span>{t.sidebar.trash}</span>
           </button>
         </Tooltip>
 
-        <Tooltip content="Configurações e preferências" shortcut="Ctrl+," position="top">
-          <button
-            onClick={onOpenSettings}
-            style={{
-              padding: '6px',
-              borderRadius: 'var(--radius-sm)',
-              color: 'var(--text-muted)',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2px', minWidth: 0 }}>
+          <Tooltip content={t.support.sidebarTooltip} position="top">
+            <button
+              type="button"
+              onClick={() => {
+                if (onOpenSupport) {
+                  onOpenSupport();
+                } else {
+                  api.openSponsorsPage().catch(() => {});
+                }
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                fontSize: '11.5px',
+                color: 'var(--text-muted)',
+                padding: '4px 6px',
+                borderRadius: 'var(--radius-sm)',
+                minWidth: 0,
+                maxWidth: '100%',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+            >
+              <Heart size={12.5} style={{ flexShrink: 0 }} />
+              <span
+                style={{
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {t.support.sidebarButton}
+              </span>
+            </button>
+          </Tooltip>
+
+          {onOpenHelp && (
+            <Tooltip
+              content={t.ux.helpAndShortcutsBtn}
+              shortcut={isMobile ? undefined : 'Ctrl+/'}
+              position="top"
+              disabled={isMobile}
+            >
+              <button
+                type="button"
+                onClick={onOpenHelp}
+                aria-label={t.ux.helpAndShortcutsBtn}
+                style={{
+                  padding: '6px',
+                  borderRadius: 'var(--radius-sm)',
+                  color: 'var(--text-muted)',
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+              >
+                <HelpCircle size={15} />
+              </button>
+            </Tooltip>
+          )}
+
+          <Tooltip
+            content={
+              hasAvailableUpdate && availableUpdateVersion
+                ? formatMessageSafe(t.updater.sidebarTooltip, availableUpdateVersion)
+                : t.sidebar.settingsTitle
+            }
+            shortcut="Ctrl+,"
+            position="top"
           >
-            <SettingsIcon size={15} />
-          </button>
-        </Tooltip>
+            <button
+              onClick={onOpenSettings}
+              aria-label={t.sidebar.settingsTitle}
+              style={{
+                padding: '6px',
+                borderRadius: 'var(--radius-sm)',
+                color: 'var(--text-muted)',
+                flexShrink: 0,
+                position: 'relative',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+            >
+              <SettingsIcon size={15} />
+              {hasAvailableUpdate && (
+                <span
+                  aria-hidden="true"
+                  style={{
+                    position: 'absolute',
+                    top: '4px',
+                    right: '4px',
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--accent)',
+                  }}
+                />
+              )}
+            </button>
+          </Tooltip>
+        </div>
       </div>
 
       {/* Resizer Handle */}

@@ -9,9 +9,51 @@ use server::TunnelManager;
 use std::sync::{Arc, Mutex};
 use tauri::{
     menu::{Menu, MenuItem},
-    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+    tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent},
     Emitter, Manager,
 };
+
+pub struct TrayLocalizationState {
+    pub open_nook: MenuItem<tauri::Wry>,
+    pub open_web: MenuItem<tauri::Wry>,
+    pub stop_web: MenuItem<tauri::Wry>,
+    pub quit: MenuItem<tauri::Wry>,
+    pub tray: TrayIcon<tauri::Wry>,
+}
+
+pub fn apply_tray_language(app: &tauri::AppHandle, lang: &str) {
+    if let Some(tray_state) = app.try_state::<TrayLocalizationState>() {
+        let normalized = commands::settings::normalize_lang(lang);
+        let (open_nook, open_web, stop_web, quit, tooltip) = match normalized {
+            "en" => (
+                "Open Nook",
+                "Open in browser",
+                "Stop Web access",
+                "Quit Nook",
+                "Nook — Your notes",
+            ),
+            "es" => (
+                "Abrir Nook",
+                "Abrir en el navegador",
+                "Detener acceso Web",
+                "Salir de Nook",
+                "Nook — Tus notas",
+            ),
+            _ => (
+                "Abrir Nook",
+                "Abrir no navegador",
+                "Encerrar acesso Web",
+                "Sair do Nook",
+                "Nook — Suas notas",
+            ),
+        };
+        let _ = tray_state.open_nook.set_text(open_nook);
+        let _ = tray_state.open_web.set_text(open_web);
+        let _ = tray_state.stop_web.set_text(stop_web);
+        let _ = tray_state.quit.set_text(quit);
+        let _ = tray_state.tray.set_tooltip(Some(tooltip));
+    }
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -65,6 +107,8 @@ pub fn run() {
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(move |app| {
             if cfg!(debug_assertions) {
                 let _ = app.handle().plugin(
@@ -91,6 +135,12 @@ pub fn run() {
 
             let db_state =
                 DbState::new(db_path).expect("Failed to initialize Lumina SQLite database");
+
+            let initial_lang = db_state
+                .conn
+                .lock()
+                .map(|c| commands::settings::get_initial_tray_language(&c))
+                .unwrap_or_else(|_| "en".to_string());
 
             app.manage(db_state);
             app.manage(WebManagerState::new());
@@ -167,7 +217,15 @@ pub fn run() {
                 tray_builder = tray_builder.icon(icon.clone());
             }
 
-            tray_builder.build(app)?;
+            let tray = tray_builder.build(app)?;
+            app.manage(TrayLocalizationState {
+                open_nook,
+                open_web,
+                stop_web,
+                quit,
+                tray,
+            });
+            apply_tray_language(app.handle(), &initial_lang);
 
             Ok(())
         })
@@ -214,12 +272,17 @@ pub fn run() {
             commands::backup::import_backup_json,
             commands::backup::trigger_auto_backup,
             commands::backup::list_auto_backups,
+            commands::backup::get_auto_backups_summary,
+            commands::backup::delete_auto_backups,
+            commands::backup::get_cache_stats,
+            commands::backup::clear_app_cache,
             commands::settings::get_settings,
             commands::settings::save_setting,
             commands::web::get_web_status,
             commands::web::start_web_server,
             commands::web::stop_web_server,
             commands::web::open_nook_web,
+            commands::web::open_sponsors_page,
             commands::mobile::start_mobile_access,
             commands::mobile::stop_mobile_access,
             commands::mobile::get_mobile_status,
@@ -229,6 +292,15 @@ pub fn run() {
             commands::mobile::get_mobile_devices,
             commands::mobile::revoke_mobile_device,
             commands::mobile::delete_mobile_device,
+            commands::workflow::inspect_linked_folder,
+            commands::workflow::open_local_folder,
+            commands::workflow::reveal_local_file,
+            commands::workflow::list_project_instructions,
+            commands::workflow::read_project_instruction_file,
+            commands::workflow::write_project_instruction_file,
+            commands::workflow::list_agent_skills,
+            commands::workflow::read_agent_skill_detail,
+            commands::workflow::read_skill_reference_file,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

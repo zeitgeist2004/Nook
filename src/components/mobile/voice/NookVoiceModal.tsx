@@ -20,6 +20,9 @@ import {
 import { VoiceMode } from '../../../types/speech';
 import { useVoiceSession } from '../../../hooks/useVoiceSession';
 import { NookIdleMascot } from '../../mascot/NookMascot';
+import { useTranslation } from '../../../i18n';
+import { useDialogA11y } from '../../../hooks/useDialogA11y';
+import { ContextualHint } from '../../ui/ContextualHint';
 
 interface NookVoiceModalProps {
   isOpen: boolean;
@@ -34,6 +37,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
   onOpenNote,
   defaultMode = 'note',
 }) => {
+  const { t } = useTranslation();
   const [hasAcknowledgedPrivacy, setHasAcknowledgedPrivacy] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
     return localStorage.getItem('nook_voice_privacy_acknowledged') === 'true';
@@ -65,6 +69,8 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
   const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  useDialogA11y({ isOpen, closeOnEscape: false });
+
   useEffect(() => {
     return () => {
       if (feedbackTimeoutRef.current) {
@@ -78,7 +84,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
     if (!text) return;
     addManualSegment(text);
     setDictationInput('');
-    setDictationFeedback('✓ Frase adicionada com sucesso à sua nota!');
+    setDictationFeedback(t.voice.addedFeedback);
     if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
     feedbackTimeoutRef.current = setTimeout(() => {
       setDictationFeedback(null);
@@ -98,7 +104,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
       if (e.key === 'Escape') {
         e.stopPropagation();
         if (status === 'listening') {
-          if (confirm('Deseja finalizar e salvar a transcrição antes de sair?')) {
+          if (confirm(t.voice.confirmExitActive)) {
             finishSession();
             onClose();
           }
@@ -112,7 +118,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, status, finishSession, onClose]);
+  }, [isOpen, status, finishSession, onClose, t.voice.confirmExitActive]);
 
   if (!isOpen) return null;
 
@@ -131,7 +137,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
 
   const handleSafeClose = () => {
     if (status === 'listening') {
-      if (confirm('Deseja finalizar e salvar a transcrição antes de sair?')) {
+      if (confirm(t.voice.confirmExitActive)) {
         finishSession();
         onClose();
       }
@@ -146,21 +152,21 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
   const getStatusLabel = () => {
     switch (status) {
       case 'requesting_permission':
-        return 'Solicitando microfone...';
+        return t.voice.statusRequesting;
       case 'listening':
-        return 'Ouvindo fala...';
+        return t.voice.statusListening;
       case 'processing':
-        return 'Processando...';
+        return t.voice.statusProcessing;
       case 'paused':
-        return 'Transcrição pausada';
+        return t.voice.statusPaused;
       case 'reconnecting':
-        return 'Reconectando serviço de voz...';
+        return t.voice.statusReconnecting;
       case 'error':
-        return 'Erro';
+        return t.voice.statusError;
       case 'finished':
-        return 'Transcrição concluída';
+        return t.voice.statusFinished;
       default:
-        return 'Pronto para iniciar';
+        return t.voice.statusIdle;
     }
   };
 
@@ -183,11 +189,14 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
       }}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={t.voice.title}
         className="animate-modal-pop"
         style={{
           width: '100%',
           maxWidth: '520px',
-          height: 'min(92vh, 680px)',
+          height: 'min(92dvh, var(--nook-viewport-height, 92dvh), 680px)',
           backgroundColor: 'var(--bg-elevated)',
           border: '1px solid var(--border-color)',
           borderRadius: '20px',
@@ -231,7 +240,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
               color: 'var(--text-muted)',
               cursor: 'pointer',
             }}
-            aria-label="Fechar Nook Voice"
+            aria-label={t.voice.closeAria}
           >
             <X size={18} />
           </button>
@@ -253,10 +262,10 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
               <ShieldCheck size={22} style={{ color: 'var(--text-primary)', flexShrink: 0, marginTop: '2px' }} />
               <div>
                 <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
-                  Privacidade & Reconhecimento de Voz
+                  {t.voice.privacyTitle}
                 </div>
                 <div style={{ fontSize: '12px', lineHeight: '1.5', color: 'var(--text-secondary)' }}>
-                  O Nook Voice utiliza o reconhecimento de voz nativo do seu navegador. Nenhum áudio bruto é gravado ou armazenado pelo Nook. O texto confirmado é sincronizado diretamente no seu banco SQLite.
+                  {t.voice.privacyDesc}
                 </div>
               </div>
             </div>
@@ -274,7 +283,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
                 cursor: 'pointer',
               }}
             >
-              Entendi e Concordo
+              {t.voice.privacyAccept}
             </button>
           </div>
         )}
@@ -310,7 +319,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
               }}
             >
               <FileText size={14} />
-              <span>Nota por Voz</span>
+              <span>{t.voice.modeNote}</span>
             </button>
 
             <button
@@ -334,7 +343,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
               }}
             >
               <Users size={14} />
-              <span>Transcrição de Reunião</span>
+              <span>{t.voice.modeMeeting}</span>
             </button>
           </div>
         )}
@@ -432,8 +441,9 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
             ref={scrollRef}
             style={{
               flex: 1,
+              minHeight: '80px',
               overflowY: 'auto',
-              padding: '16px 20px',
+              padding: '14px 18px',
               display: 'flex',
               flexDirection: 'column',
               gap: '12px',
@@ -441,6 +451,27 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
               WebkitUserSelect: 'text',
             }}
           >
+            <ContextualHint
+              tipId="voice"
+              title={t.ux.tipVoiceTitle}
+              description={t.ux.tipVoiceDesc}
+              compact
+            />
+            {!isSupported && (
+              <div
+                style={{
+                  fontSize: '12px',
+                  lineHeight: 1.45,
+                  color: 'var(--text-secondary)',
+                  padding: '8px 10px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-subtle)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                }}
+              >
+                {t.ux.voiceUnavailableHint}
+              </div>
+            )}
             {segments.length === 0 && !interimText && (
               <div
                 style={{
@@ -457,8 +488,8 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
                 }}
               >
                 {status === 'idle'
-                  ? 'Toque em Iniciar para começar a falar em português.'
-                  : 'Fale normalmente. O texto surgirá na tela e será salvo na sua nota.'}
+                  ? t.voice.idlePrompt
+                  : t.voice.listeningPrompt}
               </div>
             )}
 
@@ -550,10 +581,10 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
             >
               <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>{noteTitle || 'Nook Voice'}</span>
               <span>
-                {saveStatus === 'saving' && 'Salvando...'}
-                {saveStatus === 'saved' && 'Salvo no Nook'}
-                {saveStatus === 'offline_saved' && 'Salvo localmente (offline)'}
-                {saveStatus === 'error' && 'Erro ao persistir'}
+                {saveStatus === 'saving' && t.voice.saveSaving}
+                {saveStatus === 'saved' && t.voice.saveSaved}
+                {saveStatus === 'offline_saved' && t.voice.saveOffline}
+                {saveStatus === 'error' && t.voice.saveError}
               </span>
             </div>
 
@@ -589,7 +620,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
                       color: 'var(--text-secondary)',
                     }}
                   >
-                    Método 1: Reconhecimento Automático
+                    {t.voice.method1Label}
                   </span>
                 </div>
                 {status === 'listening' && (
@@ -611,7 +642,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
                         animation: 'pulse 1s infinite',
                       }}
                     />
-                    Ouvindo
+                    {t.voice.listeningBadge}
                   </span>
                 )}
               </div>
@@ -640,7 +671,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
                     }}
                   >
                     <Mic size={17} />
-                    <span>{status === 'error' ? 'Tentar Novamente (Método 1)' : 'Iniciar Gravação Automática'}</span>
+                    <span>{status === 'error' ? t.voice.retryMethod1 : t.voice.startAutoRecording}</span>
                   </button>
                 )}
 
@@ -664,7 +695,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
                     }}
                   >
                     <Mic size={17} />
-                    <span>Iniciando Microfone...</span>
+                    <span>{t.voice.startingMic}</span>
                   </button>
                 )}
 
@@ -689,7 +720,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
                       }}
                     >
                       <Pause size={16} />
-                      <span>Pausar</span>
+                      <span>{t.voice.pause}</span>
                     </button>
 
                     <button
@@ -711,7 +742,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
                       }}
                     >
                       <Square size={15} />
-                      <span>Finalizar</span>
+                      <span>{t.voice.finish}</span>
                     </button>
                   </>
                 )}
@@ -737,7 +768,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
                       }}
                     >
                       <Play size={16} />
-                      <span>Retomar</span>
+                      <span>{t.voice.resume}</span>
                     </button>
 
                     <button
@@ -759,7 +790,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
                       }}
                     >
                       <Square size={15} />
-                      <span>Finalizar</span>
+                      <span>{t.voice.finish}</span>
                     </button>
                   </>
                 )}
@@ -790,7 +821,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
                       }}
                     >
                       <FileText size={16} />
-                      <span>Abrir no Editor</span>
+                      <span>{t.voice.openInEditor}</span>
                     </button>
 
                     <button
@@ -812,7 +843,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
                       }}
                     >
                       <Mic size={16} />
-                      <span>Nova Transcrição</span>
+                      <span>{t.voice.newTranscription}</span>
                     </button>
                   </>
                 )}
@@ -840,7 +871,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
                   letterSpacing: '0.04em',
                 }}
               >
-                Alternativa para iPhone ou se o Método 1 falhar
+                {t.voice.dividerAlternative}
               </span>
               <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-subtle)' }} />
             </div>
@@ -877,7 +908,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
                       color: 'var(--text-primary)',
                     }}
                   >
-                    Método 2: Ditado por Teclado
+                    {t.voice.method2Label}
                   </span>
                 </div>
                 <span
@@ -891,7 +922,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
                     color: '#10B981',
                   }}
                 >
-                  ✓ 100% Funcional no iPhone
+                  {t.voice.iphoneBadge}
                 </span>
               </div>
 
@@ -903,7 +934,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
                   lineHeight: '1.4',
                 }}
               >
-                Toque no campo abaixo e use a tecla de microfone 🎙️ do seu teclado:
+                {t.voice.method2Desc}
               </p>
 
               <div style={{ display: 'flex', gap: '6px', alignItems: 'stretch' }}>
@@ -917,15 +948,16 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
                       handleAddDictation();
                     }
                   }}
-                  placeholder="Toque aqui e fale pelo microfone 🎙️ do teclado..."
+                  placeholder={t.voice.dictationPlaceholder}
                   style={{
                     flex: 1,
+                    minWidth: 0,
                     height: '42px',
                     backgroundColor: 'rgba(0, 0, 0, 0.25)',
                     border: '1px solid var(--border-color)',
                     borderRadius: 'var(--radius-sm)',
                     padding: '0 12px',
-                    fontSize: '13px',
+                    fontSize: '16px',
                     color: 'var(--text-primary)',
                     outline: 'none',
                     boxSizing: 'border-box',
@@ -953,10 +985,10 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
                     transition: 'all 0.15s ease',
                     boxSizing: 'border-box',
                   }}
-                  aria-label="Adicionar fala à nota"
+                  aria-label={t.voice.addSpeechAria}
                 >
                   <Plus size={16} />
-                  <span>Adicionar à Nota</span>
+                  <span>{t.voice.addToNote}</span>
                 </button>
               </div>
 
@@ -1001,7 +1033,7 @@ export const NookVoiceModal: React.FC<NookVoiceModalProps> = ({
                       padding: '2px 4px',
                     }}
                   >
-                    Ver nota completa no Editor →
+                    {t.voice.viewFullInEditor}
                   </button>
                 </div>
               )}

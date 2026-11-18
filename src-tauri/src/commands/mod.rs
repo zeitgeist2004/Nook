@@ -7,3 +7,4 @@ pub mod search;
 pub mod settings;
 pub mod splash;
 pub mod web;
+pub mod workflow;

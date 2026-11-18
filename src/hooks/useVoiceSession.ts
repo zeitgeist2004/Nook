@@ -14,6 +14,7 @@ import { SpeechRecognitionService } from '../services/voice/speechRecognition';
 import { screenWakeLock } from '../services/voice/screenWakeLock';
 import { voiceOfflineStorage } from '../services/voice/voiceOfflineStorage';
 import { api } from '../services/api';
+import { getTranslations, useTranslation } from '../i18n';
 
 interface UseVoiceSessionOptions {
   mode?: VoiceMode;
@@ -27,13 +28,14 @@ export function buildVoiceMarkdown(
   mode: VoiceMode,
   segments: VoiceSegment[]
 ): string {
-  let md = `# ${title}\n\n*Início: ${startTime}*\n\n`;
+  const { voice } = getTranslations();
+  let md = `# ${title}\n\n*${voice.mdStartPrefix}: ${startTime}*\n\n`;
   if (mode === 'meeting') {
-    md += '> Transcrição de reunião autorizada pelos participantes.\n\n';
+    md += `> ${voice.mdMeetingConsent}\n\n`;
   }
-  md += '## Transcrição\n\n';
+  md += `## ${voice.mdTranscriptHeading}\n\n`;
   if (segments.length === 0) {
-    md += '_Transcrição em andamento..._\n';
+    md += `_${voice.mdTranscriptInProgress}_\n`;
   } else {
     for (const seg of segments) {
       md += `[${seg.timeFormatted}] ${seg.text}\n\n`;
@@ -47,6 +49,10 @@ export function useVoiceSession({
   onNoteCreated,
   onSessionFinished,
 }: UseVoiceSessionOptions = {}) {
+  const { t } = useTranslation();
+  const tRef = useRef(t);
+  tRef.current = t;
+
   const [activeMode, setActiveMode] = useState<VoiceMode>(mode);
   const [status, setStatus] = useState<VoiceStatus>('idle');
   const [saveStatus, setSaveStatus] = useState<VoiceSaveStatus>('saved');
@@ -114,56 +120,57 @@ export function useVoiceSession({
   useEffect(() => {
     if (!isSupported) {
       setStatus('error');
-      setErrorMessage(
-        'Reconhecimento de voz não suportado neste navegador. Utilize Google Chrome ou Safari.'
-      );
+      setErrorMessage(tRef.current.voice.errUnsupportedBrowser);
       return;
     }
 
-    const engine = new SpeechRecognitionService({
-      onStatusChange: (newStatus, msg) => {
-        setStatus(newStatus);
-        if (msg) setErrorMessage(msg);
-      },
-      onInterim: (text) => {
-        setInterimText(text);
-      },
-      onFinalSegment: (text, timestamp) => {
-        const timeFormatted = new Date(timestamp).toLocaleTimeString('pt-BR', {
-          hour: '2-digit',
-          minute: '2-digit',
-        });
-        const newSeg: VoiceSegment = {
-          id: `seg_${Date.now()}_${++sequenceRef.current}`,
-          sequence: sequenceRef.current,
-          text,
-          timestamp,
-          timeFormatted,
-        };
+    const engine = new SpeechRecognitionService(
+      {
+        onStatusChange: (newStatus, msg) => {
+          setStatus(newStatus);
+          if (msg) setErrorMessage(msg);
+        },
+        onInterim: (text) => {
+          setInterimText(text);
+        },
+        onFinalSegment: (text, timestamp) => {
+          const timeFormatted = new Date(timestamp).toLocaleTimeString(tRef.current.meta.dateLocale, {
+            hour: '2-digit',
+            minute: '2-digit',
+          });
+          const newSeg: VoiceSegment = {
+            id: `seg_${Date.now()}_${++sequenceRef.current}`,
+            sequence: sequenceRef.current,
+            text,
+            timestamp,
+            timeFormatted,
+          };
 
-        setSegments((prev) => {
-          const next = [...prev, newSeg];
-          segmentsRef.current = next;
-          // Trigger progressive background save immediately if noteId is ready
-          const currentNoteId = noteIdRef.current;
-          const currentTitle = noteTitleRef.current;
-          const currentStartTime = startTimeStrRef.current;
-          const currentMode = activeModeRef.current;
-          if (currentNoteId && currentTitle && currentStartTime) {
-            const md = buildVoiceMarkdown(currentTitle, currentStartTime, currentMode, next);
-            persistMarkdownIncremental(currentNoteId, currentTitle, md);
+          setSegments((prev) => {
+            const next = [...prev, newSeg];
+            segmentsRef.current = next;
+            // Trigger progressive background save immediately if noteId is ready
+            const currentNoteId = noteIdRef.current;
+            const currentTitle = noteTitleRef.current;
+            const currentStartTime = startTimeStrRef.current;
+            const currentMode = activeModeRef.current;
+            if (currentNoteId && currentTitle && currentStartTime) {
+              const md = buildVoiceMarkdown(currentTitle, currentStartTime, currentMode, next);
+              persistMarkdownIncremental(currentNoteId, currentTitle, md);
+            }
+            return next;
+          });
+        },
+        onError: (errText, isFatal) => {
+          setErrorMessage(errText);
+          if (isFatal) {
+            setStatus('error');
+            screenWakeLock.release();
           }
-          return next;
-        });
+        },
       },
-      onError: (errText, isFatal) => {
-        setErrorMessage(errText);
-        if (isFatal) {
-          setStatus('error');
-          screenWakeLock.release();
-        }
-      },
-    });
+      tRef.current.meta.speechLocale
+    );
 
     engineRef.current = engine;
 
@@ -173,6 +180,11 @@ export function useVoiceSession({
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [isSupported, persistMarkdownIncremental]);
+
+  // Keep speech recognition language synced with UI language setting
+  useEffect(() => {
+    engineRef.current?.setLang(t.meta.speechLocale);
+  }, [t.meta.speechLocale]);
 
   // Stopwatch timer
   useEffect(() => {
@@ -199,6 +211,7 @@ export function useVoiceSession({
       // In iOS Safari, any prior deferrals or promise executions revoke transient user activation,
       // which causes Safari to reject microphone access with error: 'not-allowed'.
       setStatus('requesting_permission');
+      engineRef.current?.setLang(tRef.current.meta.speechLocale);
       engineRef.current?.start();
 
       const currentMode = selectedMode || activeModeRef.current;
@@ -216,12 +229,12 @@ export function useVoiceSession({
       setNoteId(null);
 
       const now = new Date();
-      const dateStr = now.toLocaleDateString('pt-BR');
-      const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const dateStr = now.toLocaleDateString(tRef.current.meta.dateLocale);
+      const timeStr = now.toLocaleTimeString(tRef.current.meta.dateLocale, { hour: '2-digit', minute: '2-digit' });
       const title =
         currentMode === 'meeting'
-          ? `Reunião — ${dateStr}`
-          : `Nota por voz — ${dateStr}`;
+          ? `${tRef.current.voice.noteTitleMeetingPrefix}${dateStr}`
+          : `${tRef.current.voice.noteTitleVoicePrefix}${dateStr}`;
 
       noteTitleRef.current = title;
       startTimeStrRef.current = timeStr;
@@ -253,7 +266,7 @@ export function useVoiceSession({
           if (currentSessionSeq !== sessionSeqRef.current) return;
           console.error('Failed to create voice note:', err);
           setStatus('error');
-          setErrorMessage('Não foi possível inicializar a nota no Nook.');
+          setErrorMessage(tRef.current.voice.errorInitNote);
         });
 
       // 3. Concurrently acquire wake lock
@@ -305,7 +318,7 @@ export function useVoiceSession({
       if (!trimmed) return;
 
       const now = Date.now();
-      const timeFormatted = new Date(now).toLocaleTimeString('pt-BR', {
+      const timeFormatted = new Date(now).toLocaleTimeString(tRef.current.meta.dateLocale, {
         hour: '2-digit',
         minute: '2-digit',
       });
@@ -336,12 +349,12 @@ export function useVoiceSession({
       // If note has not yet been initialized in SQLite, initialize it now
       if (!noteIdRef.current) {
         const currentDate = new Date();
-        const dateStr = currentDate.toLocaleDateString('pt-BR');
-        const timeStr = currentDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const dateStr = currentDate.toLocaleDateString(tRef.current.meta.dateLocale);
+        const timeStr = currentDate.toLocaleTimeString(tRef.current.meta.dateLocale, { hour: '2-digit', minute: '2-digit' });
         const title =
           activeModeRef.current === 'meeting'
-            ? `Reunião — ${dateStr}`
-            : `Nota por voz — ${dateStr}`;
+            ? `${tRef.current.voice.noteTitleMeetingPrefix}${dateStr}`
+            : `${tRef.current.voice.noteTitleVoicePrefix}${dateStr}`;
 
         noteTitleRef.current = title;
         startTimeStrRef.current = timeStr;

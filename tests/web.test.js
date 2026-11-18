@@ -71,10 +71,11 @@ console.log('✓ Teste 5: Adaptador frontend agnóstico validado com sucesso.');
 
 // 6. Validar Botão Web e Indicador de Conexão na TabBar
 console.log('Teste 6: Validando botão "Web" no header e status de conexão...');
+const ptLocaleSrc = fs.readFileSync(path.join(rootDir, 'src', 'i18n', 'locales', 'pt.ts'), 'utf8');
 const tabBarSrc = fs.readFileSync(path.join(rootDir, 'src', 'components', 'tabs', 'TabBar.tsx'), 'utf8');
 assert(tabBarSrc.includes('Globe'), 'TabBar deve conter ícone Globe');
-assert(tabBarSrc.includes('Abrir o Nook no seu navegador?'), 'Tooltip de abertura do navegador deve existir');
-assert(tabBarSrc.includes('Conectado ao Desktop'), 'Indicador de status "Conectado ao Desktop" deve existir no navegador');
+assert(tabBarSrc.includes('t.tabs.openInBrowserTooltip') && ptLocaleSrc.includes('Abrir o Nook no seu navegador?'), 'Tooltip de abertura do navegador deve existir');
+assert(tabBarSrc.includes('t.tabs.connectedToDesktop') && ptLocaleSrc.includes('Conectado ao Desktop'), 'Indicador de status "Conectado ao Desktop" deve existir no navegador');
 assert(tabBarSrc.includes('openNookWeb'), 'Clique no botão deve disparar api.openNookWeb()');
 console.log('✓ Teste 6: Botão Web e indicador de conexão validados com sucesso.');
 
@@ -154,7 +155,7 @@ const serverModSrc = fs.readFileSync(path.join(rootDir, 'src-tauri', 'src', 'ser
 assert(serverModSrc.includes('/api/app/restore'), 'Rota /api/app/restore deve estar registrada no servidor Axum');
 assert(serverRoutesSrc.includes('restore_app_window'), 'Função restore_app_window deve existir em routes.rs');
 assert(apiSrc.includes('restoreDesktopApp'), 'api.ts deve exportar função restoreDesktopApp()');
-assert(tabBarSrc.includes('Voltar ao App'), 'TabBar deve conter botão "Voltar ao App" no ambiente web');
+assert(tabBarSrc.includes('t.tabs.backToApp') && ptLocaleSrc.includes('Voltar ao App'), 'TabBar deve conter botão "Voltar ao App" no ambiente web');
 assert(appSrc.includes('/api/app/restore'), 'App.tsx deve restaurar app automaticamente ao fechar aba via beforeunload/pagehide');
 console.log('✓ Teste 16: Botão "Voltar ao App" e restauração automática de janela validados com sucesso.');
 

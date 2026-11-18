@@ -1,12 +1,14 @@
 import React from 'react';
-import { FileText, Pin } from 'lucide-react';
+import { FileText, Pin, MoreHorizontal } from 'lucide-react';
 import { NoteSummary, Collection } from '../../types';
+import { useTranslation } from '../../i18n';
 
 interface QuickNotesListProps {
   notes: NoteSummary[];
   activeNoteId: string | null;
   onSelectNote: (noteId: string) => void;
   onOpenContextMenu: (e: React.MouseEvent, type: 'note' | 'collection', item: NoteSummary | Collection) => void;
+  isMobile?: boolean;
 }
 
 export const QuickNotesList: React.FC<QuickNotesListProps> = ({
@@ -14,7 +16,9 @@ export const QuickNotesList: React.FC<QuickNotesListProps> = ({
   activeNoteId,
   onSelectNote,
   onOpenContextMenu,
+  isMobile = false,
 }) => {
+  const { t } = useTranslation();
   // Quick notes have no collection_id
   const quickNotes = notes.filter((n) => !n.collection_id);
 
@@ -28,7 +32,7 @@ export const QuickNotesList: React.FC<QuickNotesListProps> = ({
           textAlign: 'center',
         }}
       >
-        Nenhuma nota rápida.
+        {t.sidebar.noQuickNotes}
       </div>
     );
   }
@@ -83,7 +87,7 @@ export const QuickNotesList: React.FC<QuickNotesListProps> = ({
                   whiteSpace: 'nowrap',
                 }}
               >
-                {note.title || 'Sem título'}
+                {note.title || t.common.untitled}
               </span>
 
               {note.snippet && (
@@ -104,6 +108,29 @@ export const QuickNotesList: React.FC<QuickNotesListProps> = ({
 
             {note.is_pinned && (
               <Pin size={12} style={{ color: 'var(--text-primary)', flexShrink: 0 }} />
+            )}
+
+            {isMobile && (
+              <button
+                type="button"
+                aria-label={t.ux.itemMenuAria}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenContextMenu(e, 'note', note);
+                }}
+                style={{
+                  width: '34px',
+                  height: '34px',
+                  borderRadius: 'var(--radius-sm)',
+                  color: 'var(--text-muted)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <MoreHorizontal size={15} />
+              </button>
             )}
           </div>
         );

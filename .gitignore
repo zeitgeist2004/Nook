@@ -26,6 +26,8 @@ lumina_auto_backup_*.json
 .agents/
 skills-lock.json
 Nook_Identidade_Para_LLM/
+**/.hyperframes/
+marketing/
 
 # OS & Editor Artifacts
 .DS_Store

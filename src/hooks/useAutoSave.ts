@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../services/api';
 import { SaveStatus } from '../types';
+import { getTranslations } from '../i18n';
 
 interface UseAutoSaveOptions {
   noteId: string | null;
@@ -192,7 +193,7 @@ export function useAutoSave({
       console.error('Nook AutoSave persistence error:', err);
       if (lastSavedRef.current.docKey === targetKey) {
         setStatus('error');
-        setErrorMessage(err?.toString() || 'Erro ao persistir nota');
+        setErrorMessage(err?.toString() || getTranslations().appAlerts.persistNoteError);
 
         if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
         retryTimerRef.current = setTimeout(() => {

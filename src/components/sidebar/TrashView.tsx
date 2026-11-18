@@ -3,6 +3,8 @@ import { Trash2, RotateCcw, FileText, Folder, X } from 'lucide-react';
 import { NoteSummary, Collection } from '../../types';
 import { api } from '../../services/api';
 import { NookCleanTrashMascot } from '../mascot/NookMascot';
+import { useTranslation } from '../../i18n';
+import { useDialogA11y } from '../../hooks/useDialogA11y';
 
 interface TrashViewProps {
   isOpen: boolean;
@@ -15,6 +17,7 @@ export const TrashView: React.FC<TrashViewProps> = ({
   onClose,
   onRestoreSuccess,
 }) => {
+  const { t } = useTranslation();
   const [trashNotes, setTrashNotes] = useState<NoteSummary[]>([]);
   const [trashCollections, setTrashCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(false);
@@ -43,17 +46,7 @@ export const TrashView: React.FC<TrashViewProps> = ({
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  useDialogA11y({ isOpen, onClose });
 
   if (!isOpen) return null;
 
@@ -117,10 +110,13 @@ export const TrashView: React.FC<TrashViewProps> = ({
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={t.trash.title}
         onClick={(e) => e.stopPropagation()}
         style={{
           width: 'min(94vw, 560px)',
-          maxHeight: 'min(85vh, 600px)',
+          maxHeight: 'min(88dvh, 620px)',
           backgroundColor: 'var(--bg-elevated)',
           border: '1px solid var(--border-color)',
           borderRadius: 'var(--radius-lg)',
@@ -134,16 +130,18 @@ export const TrashView: React.FC<TrashViewProps> = ({
         {/* Header */}
         <div
           style={{
-            padding: '16px 20px',
+            padding: '14px 18px',
             borderBottom: '1px solid var(--border-color)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '8px',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Trash2 size={18} style={{ color: 'var(--danger)' }} />
-            <span style={{ fontSize: '15px', fontWeight: 600 }}>Lixeira</span>
+            <span style={{ fontSize: '15px', fontWeight: 600 }}>{t.trash.title}</span>
             <span
               style={{
                 fontSize: '11px',
@@ -154,7 +152,7 @@ export const TrashView: React.FC<TrashViewProps> = ({
                 border: '1px solid var(--border-color)',
               }}
             >
-              {totalItems} {totalItems === 1 ? 'item' : 'itens'}
+              {totalItems} {totalItems === 1 ? t.trash.itemSingular : t.trash.itemPlural}
             </span>
           </div>
 
@@ -170,13 +168,13 @@ export const TrashView: React.FC<TrashViewProps> = ({
                   backgroundColor: 'var(--danger-muted)',
                 }}
               >
-                Esvaziar lixeira
+                {t.trash.emptyTrash}
               </button>
             )}
 
             {confirmEmpty && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--danger)' }}>Confirmar exclusão?</span>
+                <span style={{ fontSize: '11px', color: 'var(--danger)' }}>{t.trash.confirmDelete}</span>
                 <button
                   onClick={handleEmptyTrash}
                   style={{
@@ -187,7 +185,7 @@ export const TrashView: React.FC<TrashViewProps> = ({
                     borderRadius: 'var(--radius-sm)',
                   }}
                 >
-                  Sim, apagar tudo
+                  {t.trash.confirmEmptyBtn}
                 </button>
                 <button
                   onClick={() => setConfirmEmpty(false)}
@@ -199,7 +197,7 @@ export const TrashView: React.FC<TrashViewProps> = ({
                     borderRadius: 'var(--radius-sm)',
                   }}
                 >
-                  Cancelar
+                  {t.trash.cancel}
                 </button>
               </div>
             )}
@@ -207,6 +205,7 @@ export const TrashView: React.FC<TrashViewProps> = ({
             <button
               onClick={onClose}
               style={{ color: 'var(--text-muted)', padding: '4px' }}
+              aria-label={t.common.close}
             >
               <X size={16} />
             </button>
@@ -226,7 +225,7 @@ export const TrashView: React.FC<TrashViewProps> = ({
         >
           {loading ? (
             <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
-              Carregando itens...
+              {t.trash.loadingItems}
             </div>
           ) : totalItems === 0 ? (
             <div
@@ -244,10 +243,10 @@ export const TrashView: React.FC<TrashViewProps> = ({
               <NookCleanTrashMascot size={104} />
               <div style={{ maxWidth: '280px' }}>
                 <p style={{ fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                  Lixeira completamente limpa
+                  {t.trash.cleanTitle}
                 </p>
                 <p style={{ fontSize: '12px', lineHeight: 1.4 }}>
-                  Notas e pastas que você excluir no futuro aparecerão aqui.
+                  {t.trash.cleanDesc}
                 </p>
               </div>
             </div>
@@ -270,13 +269,13 @@ export const TrashView: React.FC<TrashViewProps> = ({
                     <Folder size={15} style={{ color: 'var(--text-muted)' }} />
                     <span style={{ fontSize: '13px', fontWeight: 500 }}>{col.name}</span>
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                      ({col.collection_type === 'project' ? 'Projeto' : 'Pasta'})
+                      ({col.collection_type === 'project' ? t.trash.projectLabel : t.trash.folderLabel})
                     </span>
                   </div>
 
                   <button
                     onClick={() => handleRestoreCollection(col.id)}
-                    title="Restaurar pasta e conteúdo"
+                    title={t.trash.restoreFolderTooltip}
                     className="btn-secondary"
                     style={{
                       display: 'inline-flex',
@@ -288,7 +287,7 @@ export const TrashView: React.FC<TrashViewProps> = ({
                     }}
                   >
                     <RotateCcw size={13} />
-                    Restaurar
+                    {t.trash.restore}
                   </button>
                 </div>
               ))}
@@ -310,7 +309,7 @@ export const TrashView: React.FC<TrashViewProps> = ({
                     <FileText size={15} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                     <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                       <span style={{ fontSize: '13px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {note.title || 'Sem título'}
+                        {note.title || t.common.untitled}
                       </span>
                       {note.snippet && (
                         <span style={{ fontSize: '11px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -323,7 +322,7 @@ export const TrashView: React.FC<TrashViewProps> = ({
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <button
                       onClick={() => handleRestoreNote(note.id)}
-                      title="Restaurar nota"
+                      title={t.trash.restoreNoteTooltip}
                       className="btn-secondary"
                       style={{
                         display: 'inline-flex',
@@ -335,12 +334,12 @@ export const TrashView: React.FC<TrashViewProps> = ({
                       }}
                     >
                       <RotateCcw size={13} />
-                      Restaurar
+                      {t.trash.restore}
                     </button>
 
                     <button
                       onClick={() => handlePermanentDeleteNote(note.id)}
-                      title="Excluir permanentemente"
+                      title={t.trash.permanentDeleteTooltip}
                       style={{
                         padding: '5px',
                         color: 'var(--text-muted)',

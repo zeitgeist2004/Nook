@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
+import { useTranslation } from '../../i18n';
 
 interface QRCodeSvgProps {
   value: string;
@@ -18,6 +19,7 @@ export const QRCodeSvg: React.FC<QRCodeSvgProps> = ({
   className,
   style,
 }) => {
+  const { t } = useTranslation();
   const [svgContent, setSvgContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
@@ -48,14 +50,14 @@ export const QRCodeSvg: React.FC<QRCodeSvgProps> = ({
       .catch((err) => {
         if (!isCancelled) {
           console.error('Failed to generate offline QR Code:', err);
-          setError('Erro ao gerar QR code');
+          setError(t.mobile.modalQrError);
         }
       });
 
     return () => {
       isCancelled = true;
     };
-  }, [value, size, darkColor, lightColor]);
+  }, [value, size, darkColor, lightColor, t.mobile.modalQrError]);
 
   if (error) {
     return (

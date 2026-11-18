@@ -228,15 +228,16 @@ assert(!settingsModalCode.includes("secondary: '#10B981'"), 'SettingsModal não 
 console.log('✓ Teste 15: Tema Neon estritamente monocromático e verde com 1 único tom validado com sucesso.');
 
 // ----------------------------------------------------------------------------
-// TESTE 16: Desativação de Atalhos de Teclado/Comandos no Mobile
+// TESTE 16: Onboarding Adaptativo no Mobile & Supressão de Comandos Desktop
 // ----------------------------------------------------------------------------
-console.log('Teste 16: Validando que Onboarding e comandos de desktop não abrem no mobile...');
-assert(appCode.includes('!isMobileViewport && isOnboardingOpen'), 'OnboardingModal não deve renderizar em telas mobile');
+console.log('Teste 16: Validando adaptação responsiva de Onboarding e supressão de atalhos desktop no mobile...');
+assert(appCode.includes('isMobile={isMobileViewport}'), 'OnboardingModal deve adaptar seu layout para telas mobile via isMobileViewport');
 assert(appCode.includes("isMobileViewport ? 'calc(100% - 48px)' : 'calc(100% - 38px)'"), 'Layout deve compensar a altura correta no mobile');
 
+const ptLocaleCode = fs.readFileSync(path.join(rootDir, 'src', 'i18n', 'locales', 'pt.ts'), 'utf-8');
 const editorCode = fs.readFileSync(path.join(rootDir, 'src', 'components', 'editor', 'Editor.tsx'), 'utf-8');
 assert(editorCode.includes('if (isMobile)'), 'Editor deve ter estado vazio dedicado para mobile');
-assert(editorCode.includes('Nova Anotação'), 'Editor mobile deve exibir botão de Nova Anotação em toque');
+assert(editorCode.includes('t.editor.newNoteMobile') && ptLocaleCode.includes('Nova Anotação'), 'Editor mobile deve exibir botão de Nova Anotação em toque');
 
 const commandPaletteCode = fs.readFileSync(path.join(rootDir, 'src', 'components', 'search', 'CommandPalette.tsx'), 'utf-8');
 assert(commandPaletteCode.includes('isMobile\n    ? []'), 'CommandPalette no mobile não deve poluir com atalhos de comando desktop');

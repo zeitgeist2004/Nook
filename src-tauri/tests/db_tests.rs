@@ -1,4 +1,3 @@
-use app_lib::db::models::*;
 use app_lib::db::queries::DbQueries;
 use app_lib::db::schema;
 use rusqlite::Connection;
@@ -144,4 +143,82 @@ fn test_search_notes_and_collections() {
     assert!(!results_coll.is_empty());
     assert_eq!(results_coll[0].item_type, "collection");
     assert_eq!(results_coll[0].title, "Arquitetura e Design");
+}
+
+#[test]
+fn test_upgrade_migration_preserves_full_library_data() {
+    use app_lib::db::DbState;
+
+    let tmp_dir = std::env::temp_dir().join(format!("nook_upgrade_integrity_{}", uuid::Uuid::new_v4()));
+    std::fs::create_dir_all(&tmp_dir).unwrap();
+    let db_path = tmp_dir.join("lumina_notes.db");
+
+    // Simulate pre-migration v0/v1 library with full structure: projects, folders, markdown notes,
+    // version history, trashed items, settings, and existing manual/auto backups
+    let proj_id;
+    let folder_id;
+    let note_active_id;
+    let note_trash_id;
+    {
+        let conn = Connection::open(&db_path).unwrap();
+        schema::init_db(&conn).unwrap();
+        // Reset migration table to v1 to force upgrade path to CURRENT_SCHEMA_VERSION
+        conn.execute("DELETE FROM migrations WHERE version > 1", []).unwrap();
+
+        let proj = DbQueries::create_collection(&conn, "Client Hub", "project", None).unwrap();
+        let sub = DbQueries::create_collection(&conn, "Specs", "folder", Some(proj.id.clone())).unwrap();
+        let active = DbQueries::create_note(
+            &conn,
+            Some(sub.id.clone()),
+            Some("Architecture".into()),
+            Some("# System\n\n- [x] Persisted safely".into()),
+        ).unwrap();
+        let trashed = DbQueries::create_note(&conn, None, Some("Old Draft".into()), Some("Trash body".into())).unwrap();
+        DbQueries::soft_delete_note(&conn, &trashed.id).unwrap();
+        DbQueries::create_note_version(&conn, &active.id, "Architecture v0", "# Older").unwrap();
+        DbQueries::set_setting(&conn, "theme", "sakura").unwrap();
+        DbQueries::set_setting(&conn, "language", "es").unwrap();
+
+        proj_id = proj.id;
+        folder_id = sub.id;
+        note_active_id = active.id;
+        note_trash_id = trashed.id;
+    }
+
+    // Re-open through DbState::new as an updated app version would do on startup
+    let db_state = DbState::new(db_path.clone()).unwrap();
+    let conn = db_state.conn.lock().unwrap();
+
+    assert_eq!(schema::get_schema_version(&conn), schema::CURRENT_SCHEMA_VERSION);
+
+    let colls = DbQueries::list_active_collections(&conn).unwrap();
+    assert!(colls.iter().any(|c| c.id == proj_id && c.name == "Client Hub"));
+    assert!(colls.iter().any(|c| c.id == folder_id && c.parent_id.as_deref() == Some(proj_id.as_str())));
+
+    let note = DbQueries::get_note_by_id(&conn, &note_active_id).unwrap().unwrap();
+    assert_eq!(note.title, "Architecture");
+    assert!(note.content.contains("Persisted safely"));
+
+    let versions = DbQueries::list_note_versions(&conn, &note_active_id).unwrap();
+    assert_eq!(versions.len(), 1);
+    assert_eq!(versions[0].title, "Architecture v0");
+
+    let trash = DbQueries::list_trash_notes(&conn).unwrap();
+    assert!(trash.iter().any(|n| n.id == note_trash_id && n.title == "Old Draft"));
+
+    let settings = DbQueries::get_settings(&conn).unwrap();
+    assert!(settings.iter().any(|s| s.key == "theme" && s.value == "sakura"));
+    assert!(settings.iter().any(|s| s.key == "language" && s.value == "es"));
+    assert!(settings.iter().any(|s| s.key == "backup_frequency" && s.value == "daily"));
+
+    // Verify pre-migration snapshot was safely generated in backups/
+    let backup_files: Vec<_> = std::fs::read_dir(tmp_dir.join("backups"))
+        .unwrap()
+        .flatten()
+        .collect();
+    assert!(backup_files.iter().any(|e| e.file_name().to_string_lossy().starts_with("nook_pre_migration_v1_")));
+
+    drop(conn);
+    drop(db_state);
+    let _ = std::fs::remove_dir_all(&tmp_dir);
 }

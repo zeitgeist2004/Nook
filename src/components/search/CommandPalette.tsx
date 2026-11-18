@@ -17,9 +17,20 @@ import {
   Database,
   X,
   Mic,
+  Globe,
+  Layers,
+  GitCommitHorizontal,
+  Sparkles,
+  FolderGit2,
+  FileCode2,
+  BookMarked,
+  Heart,
 } from 'lucide-react';
-import { SearchResultItem } from '../../types';
-import { api } from '../../services/api';
+import { DevWorkflowToolId, SearchResultItem } from '../../types';
+import { api, isTauri } from '../../services/api';
+import { TranslationDictionary, useTranslation } from '../../i18n';
+import { useDialogA11y } from '../../hooks/useDialogA11y';
+import { ContextualHint } from '../ui/ContextualHint';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -31,11 +42,14 @@ interface CommandPaletteProps {
   onOpenTrash: () => void;
   onOpenExternalFile: () => void;
   onToggleTheme: () => void;
+  onToggleLanguage?: () => void;
   onExportLibrary: () => void;
   onOpenVersionHistory?: () => void;
   onOpenShortcuts?: () => void;
   onTriggerBackup?: () => void;
   onOpenVoice?: () => void;
+  onOpenProjectTools?: (tool?: DevWorkflowToolId) => void;
+  onOpenSupport?: () => void;
   isMobile?: boolean;
 }
 
@@ -43,16 +57,24 @@ interface ActionCommand {
   id: string;
   title: string;
   subtitle: string;
+  keywords?: string;
   icon: React.ReactNode;
-  category: 'notes' | 'organization' | 'system';
+  category: 'notes' | 'organization' | 'workflow' | 'system';
   shortcut?: string;
   run: () => void;
 }
 
-const CATEGORIES: Array<{ id: 'notes' | 'organization' | 'system'; label: string }> = [
-  { id: 'notes', label: 'Notas & Escrita' },
-  { id: 'organization', label: 'Organização & Projetos' },
-  { id: 'system', label: 'Preferências & Sistema' },
+const CATEGORIES: Array<{
+  id: 'notes' | 'organization' | 'workflow' | 'system';
+  labelKey: keyof Pick<
+    TranslationDictionary['commandPalette'],
+    'categoryNotes' | 'categoryOrganization' | 'categoryWorkflow' | 'categorySystem'
+  >;
+}> = [
+  { id: 'notes', labelKey: 'categoryNotes' },
+  { id: 'organization', labelKey: 'categoryOrganization' },
+  { id: 'workflow', labelKey: 'categoryWorkflow' },
+  { id: 'system', labelKey: 'categorySystem' },
 ];
 
 const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
@@ -65,24 +87,32 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
   onOpenTrash,
   onOpenExternalFile,
   onToggleTheme,
+  onToggleLanguage,
   onExportLibrary,
   onOpenVersionHistory,
   onOpenShortcuts,
   onTriggerBackup,
   onOpenVoice,
+  onOpenProjectTools,
+  onOpenSupport,
   isMobile = false,
 }) => {
+  const { t, format } = useTranslation();
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  useDialogA11y({ isOpen, onClose });
+
+  const isDesktopRuntime = isTauri();
+
   const actionCommands: ActionCommand[] = [
     // 1. NOTAS & ESCRITA
     {
       id: 'cmd-voice-note',
-      title: 'Nova Nota por Voz (Nook Voice)',
-      subtitle: 'Transcrever fala em nota de texto automaticamente',
+      title: t.commandPalette.cmdVoiceNoteTitle,
+      subtitle: t.commandPalette.cmdVoiceNoteSub,
       icon: <Mic size={16} />,
       category: 'notes',
       run: () => {
@@ -92,8 +122,8 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
     },
     {
       id: 'cmd-new-note',
-      title: 'Nova Nota Rápida',
-      subtitle: 'Criar uma nova anotação imediatamente',
+      title: t.commandPalette.cmdNewQuickNoteTitle,
+      subtitle: t.commandPalette.cmdNewQuickNoteSub,
       icon: <FilePlus size={16} />,
       category: 'notes',
       shortcut: 'Ctrl+N',
@@ -104,8 +134,8 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
     },
     {
       id: 'cmd-reading-mode',
-      title: 'Alternar Modo Leitura / Edição',
-      subtitle: 'Visualizar Markdown formatado ou editar texto',
+      title: t.commandPalette.cmdToggleModeTitle,
+      subtitle: t.commandPalette.cmdToggleModeSub,
       icon: <BookOpen size={16} />,
       category: 'notes',
       shortcut: 'Ctrl+E',
@@ -116,8 +146,8 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
     },
     {
       id: 'cmd-version-history',
-      title: 'Versões Anteriores da Nota',
-      subtitle: 'Ver histórico de edições e restaurar texto salvo',
+      title: t.commandPalette.cmdVersionHistoryTitle,
+      subtitle: t.commandPalette.cmdVersionHistorySub,
       icon: <History size={16} />,
       category: 'notes',
       run: () => {
@@ -127,8 +157,8 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
     },
     {
       id: 'cmd-open-external',
-      title: 'Abrir Arquivo (.txt / .md)',
-      subtitle: 'Editar arquivo do computador diretamente no Nook',
+      title: t.commandPalette.cmdOpenExternalTitle,
+      subtitle: t.commandPalette.cmdOpenExternalSub,
       icon: <FileUp size={16} />,
       category: 'notes',
       run: () => {
@@ -140,8 +170,8 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
     // 2. ORGANIZAÇÃO & PROJETOS
     {
       id: 'cmd-new-project',
-      title: 'Novo Projeto',
-      subtitle: 'Criar uma pasta para organizar anotações',
+      title: t.commandPalette.cmdNewProjectTitle,
+      subtitle: t.commandPalette.cmdNewProjectSub,
       icon: <FolderPlus size={16} />,
       category: 'organization',
       run: () => {
@@ -151,8 +181,8 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
     },
     {
       id: 'cmd-trash',
-      title: 'Abrir Lixeira',
-      subtitle: 'Ver e restaurar notas ou pastas apagadas',
+      title: t.commandPalette.cmdOpenTrashTitle,
+      subtitle: t.commandPalette.cmdOpenTrashSub,
       icon: <Trash2 size={16} />,
       category: 'organization',
       run: () => {
@@ -162,8 +192,8 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
     },
     {
       id: 'cmd-export',
-      title: 'Exportar Toda a Biblioteca',
-      subtitle: 'Salvar notas organizadas em pastas no Windows',
+      title: t.commandPalette.cmdExportLibraryTitle,
+      subtitle: t.commandPalette.cmdExportLibrarySub,
       icon: <Download size={16} />,
       category: 'organization',
       run: () => {
@@ -172,11 +202,105 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
       },
     },
 
+    // 2B. FERRAMENTAS DO PROJETO (Opcional & sob demanda)
+    ...(onOpenProjectTools
+      ? [
+          {
+            id: 'cmd-wf-tools',
+            title: t.commandPalette.cmdProjectToolsTitle,
+            subtitle: t.commandPalette.cmdProjectToolsSub,
+            icon: <Layers size={16} />,
+            category: 'workflow' as const,
+            run: () => {
+              onClose();
+              onOpenProjectTools('context-pack');
+            },
+          },
+          {
+            id: 'cmd-wf-context',
+            title: t.commandPalette.cmdContextPackTitle,
+            subtitle: t.commandPalette.cmdContextPackSub,
+            icon: <Layers size={16} />,
+            category: 'workflow' as const,
+            run: () => {
+              onClose();
+              onOpenProjectTools('context-pack');
+            },
+          },
+          {
+            id: 'cmd-wf-prompts',
+            title: t.commandPalette.cmdPromptLibraryTitle,
+            subtitle: t.commandPalette.cmdPromptLibrarySub,
+            icon: <Sparkles size={16} />,
+            category: 'workflow' as const,
+            run: () => {
+              onClose();
+              onOpenProjectTools('prompts');
+            },
+          },
+          {
+            id: 'cmd-wf-handoff',
+            title: t.commandPalette.cmdSessionHandoffTitle,
+            subtitle: t.commandPalette.cmdSessionHandoffSub,
+            icon: <GitCommitHorizontal size={16} />,
+            category: 'workflow' as const,
+            run: () => {
+              onClose();
+              onOpenProjectTools('handoff');
+            },
+          },
+          {
+            id: 'cmd-wf-journal',
+            title: t.commandPalette.cmdDevJournalTitle,
+            subtitle: t.commandPalette.cmdDevJournalSub,
+            icon: <BookOpen size={16} />,
+            category: 'workflow' as const,
+            run: () => {
+              onClose();
+              onOpenProjectTools('journal');
+            },
+          },
+          {
+            id: 'cmd-wf-link',
+            title: t.commandPalette.cmdLinkFolderTitle,
+            subtitle: t.commandPalette.cmdLinkFolderSub,
+            icon: <FolderGit2 size={16} />,
+            category: 'workflow' as const,
+            run: () => {
+              onClose();
+              onOpenProjectTools('project-linking');
+            },
+          },
+          {
+            id: 'cmd-wf-instructions',
+            title: t.commandPalette.cmdProjectInstructionsTitle,
+            subtitle: t.commandPalette.cmdProjectInstructionsSub,
+            icon: <FileCode2 size={16} />,
+            category: 'workflow' as const,
+            run: () => {
+              onClose();
+              onOpenProjectTools('instructions');
+            },
+          },
+          {
+            id: 'cmd-wf-skills',
+            title: t.commandPalette.cmdAgentSkillsTitle,
+            subtitle: t.commandPalette.cmdAgentSkillsSub,
+            icon: <BookMarked size={16} />,
+            category: 'workflow' as const,
+            run: () => {
+              onClose();
+              onOpenProjectTools('skills');
+            },
+          },
+        ]
+      : []),
+
     // 3. PREFERÊNCIAS & SISTEMA
     {
       id: 'cmd-settings',
-      title: 'Configurações',
-      subtitle: 'Aparência, tipografia e preferências gerais',
+      title: t.commandPalette.cmdOpenSettingsTitle,
+      subtitle: t.commandPalette.cmdOpenSettingsSub,
       icon: <SettingsIcon size={16} />,
       category: 'system',
       shortcut: 'Ctrl+,',
@@ -187,8 +311,8 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
     },
     {
       id: 'cmd-theme',
-      title: 'Alternar Tema Visual',
-      subtitle: 'Mudar entre Cinza, Escuro, Claro, Neon e Sakura',
+      title: t.commandPalette.cmdToggleThemeTitle,
+      subtitle: t.commandPalette.cmdToggleThemeSub,
       icon: <Moon size={16} />,
       category: 'system',
       run: () => {
@@ -196,10 +320,25 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
         onToggleTheme();
       },
     },
+    ...(onToggleLanguage
+      ? [
+          {
+            id: 'cmd-language',
+            title: t.commandPalette.cmdCycleLanguageTitle,
+            subtitle: t.commandPalette.cmdCycleLanguageSub,
+            icon: <Globe size={16} />,
+            category: 'system' as const,
+            run: () => {
+              onClose();
+              onToggleLanguage();
+            },
+          },
+        ]
+      : []),
     {
       id: 'cmd-shortcuts',
-      title: 'Guia de Atalhos',
-      subtitle: 'Ver todos os atalhos rápidos do Nook',
+      title: t.commandPalette.cmdShortcutsTitle,
+      subtitle: t.commandPalette.cmdShortcutsSub,
       icon: <Keyboard size={16} />,
       category: 'system',
       shortcut: 'Ctrl+/',
@@ -208,15 +347,35 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
         onOpenShortcuts?.();
       },
     },
+    ...(isDesktopRuntime
+      ? [
+          {
+            id: 'cmd-auto-backup',
+            title: t.commandPalette.cmdTriggerBackupTitle,
+            subtitle: t.commandPalette.cmdTriggerBackupSub,
+            icon: <Database size={16} />,
+            category: 'system' as const,
+            run: () => {
+              onClose();
+              onTriggerBackup?.();
+            },
+          },
+        ]
+      : []),
     {
-      id: 'cmd-auto-backup',
-      title: 'Fazer Cópia de Segurança (Backup)',
-      subtitle: 'Salvar cópia local de segurança imediatamente',
-      icon: <Database size={16} />,
+      id: 'cmd-support-nook',
+      title: t.support.commandTitle,
+      subtitle: t.support.commandSubtitle,
+      keywords: t.support.commandKeywords,
+      icon: <Heart size={16} />,
       category: 'system',
       run: () => {
         onClose();
-        onTriggerBackup?.();
+        if (onOpenSupport) {
+          onOpenSupport();
+        } else {
+          api.openSponsorsPage().catch(() => {});
+        }
       },
     },
   ];
@@ -255,12 +414,14 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
   }, [isOpen]);
 
   // Combine items for keyboard navigation (On mobile, we only search notes & collections, no desktop command actions)
+  const normalizedQuery = query.toLowerCase();
   const filteredActions = isMobile
     ? []
     : actionCommands.filter(
         (a) =>
-          a.title.toLowerCase().includes(query.toLowerCase()) ||
-          a.subtitle.toLowerCase().includes(query.toLowerCase())
+          a.title.toLowerCase().includes(normalizedQuery) ||
+          a.subtitle.toLowerCase().includes(normalizedQuery) ||
+          (a.keywords ? a.keywords.toLowerCase().includes(normalizedQuery) : false)
       );
 
   const totalItems = searchResults.length + filteredActions.length;
@@ -305,18 +466,25 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
         display: 'flex',
         alignItems: 'flex-start',
         justifyContent: 'center',
-        paddingTop: isMobile ? 'max(16px, env(safe-area-inset-top, 16px))' : '12vh',
-        paddingLeft: isMobile ? '12px' : 0,
-        paddingRight: isMobile ? '12px' : 0,
+        paddingTop: isMobile ? 'max(14px, env(safe-area-inset-top, 14px))' : 'min(12dvh, 96px)',
+        paddingLeft: isMobile ? '12px' : '16px',
+        paddingRight: isMobile ? '12px' : '16px',
+        paddingBottom: '12px',
+        boxSizing: 'border-box',
       }}
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={isMobile ? t.commandPalette.placeholderMobile : t.commandPalette.placeholder}
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: isMobile ? '100%' : '620px',
+          width: isMobile ? '100%' : 'min(92vw, 620px)',
           maxWidth: '620px',
-          maxHeight: isMobile ? 'calc(80vh - env(safe-area-inset-top, 0px))' : '480px',
+          maxHeight: isMobile
+            ? 'min(80dvh, calc(var(--nook-viewport-height, 100dvh) - 28px - env(safe-area-inset-top, 0px)))'
+            : 'min(82dvh, 480px)',
           backgroundColor: 'var(--bg-elevated)',
           border: '1px solid var(--border-color)',
           borderRadius: isMobile ? '16px' : 'var(--radius-lg)',
@@ -344,10 +512,10 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={isMobile ? 'Buscar notas...' : 'Buscar notas, pastas ou digitar um comando...'}
+            placeholder={isMobile ? t.commandPalette.placeholderMobile : t.commandPalette.placeholder}
             style={{
               width: '100%',
-              fontSize: '15px',
+              fontSize: isMobile ? '16px' : '15px',
               color: 'var(--text-primary)',
               backgroundColor: 'transparent',
             }}
@@ -368,7 +536,7 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
                 borderRadius: '50%',
                 flexShrink: 0,
               }}
-              aria-label="Fechar busca"
+              aria-label={t.commandPalette.closeSearchAria}
             >
               <X size={18} />
             </button>
@@ -381,13 +549,20 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
         <div
           style={{
             flex: 1,
+            minHeight: 0,
             overflowY: 'auto',
             padding: '8px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '2px',
+            gap: '6px',
           }}
         >
+          <ContextualHint
+            tipId="search"
+            title={t.ux.tipSearchTitle}
+            description={t.ux.tipSearchDesc}
+            compact
+          />
           {/* Mobile empty query state */}
           {isMobile && searchResults.length === 0 && !query.trim() && (
             <div
@@ -403,10 +578,10 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
             >
               <Search size={32} style={{ opacity: 0.35 }} />
               <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                Buscar Anotações
+                {t.commandPalette.searchNotesHeading}
               </span>
               <span style={{ fontSize: '12px', maxWidth: '240px', lineHeight: '1.4' }}>
-                Digite palavras para encontrar qualquer nota por título ou conteúdo.
+                {t.commandPalette.searchNotesSubtitle}
               </span>
             </div>
           )}
@@ -423,7 +598,7 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
                   letterSpacing: '0.04em',
                 }}
               >
-                Resultados encontrados
+                {t.commandPalette.resultsFound}
               </div>
 
               {searchResults.map((item, idx) => {
@@ -458,7 +633,7 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
                           </span>
                           {item.collection_name && (
                             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                              em {item.collection_name}
+                              {format(t.commandPalette.inCollection, { name: item.collection_name })}
                             </span>
                           )}
                         </div>
@@ -510,7 +685,7 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
                         paddingTop: catIdx > 0 || searchResults.length > 0 ? '8px' : '4px',
                       }}
                     >
-                      {cat.label}
+                      {t.commandPalette[cat.labelKey]}
                     </div>
 
                     {catActions.map((cmd) => {
@@ -574,13 +749,22 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
           {totalItems === 0 && query.trim() && (
             <div
               style={{
-                padding: '32px',
+                padding: '28px 16px',
                 textAlign: 'center',
                 color: 'var(--text-muted)',
                 fontSize: '13px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '4px',
               }}
             >
-              Nenhum resultado encontrado para "{query}".
+              <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
+                {t.ux.emptySearchTitle}
+              </span>
+              <span style={{ fontSize: '12px' }}>
+                {format(t.commandPalette.noResults, { query })}
+              </span>
             </div>
           )}
         </div>
@@ -600,9 +784,9 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({
             }}
           >
             <div style={{ display: 'flex', gap: '12px' }}>
-              <span>↑↓ navegar</span>
-              <span>↵ selecionar</span>
-              <span>ESC fechar</span>
+              <span>{t.commandPalette.navNavigate}</span>
+              <span>{t.commandPalette.navSelect}</span>
+              <span>{t.commandPalette.navClose}</span>
             </div>
           </div>
         )}

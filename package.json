@@ -2,7 +2,7 @@
   "name": "nook",
   "private": true,
   "version": "1.0.0",
-  "description": "Nook — Bloco de notas minimalista e base de conhecimento local-first para Windows, Web e Mobile.",
+  "description": "Nook — Minimalist, fast, 100% local-first notes and project workspace for Windows, Web, and Mobile.",
   "author": "zeitgeist2004",
   "license": "MIT",
   "repository": {
@@ -13,7 +13,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "test": "node tests/suite.js && node tests/animations.test.js && node tests/web.test.js && node tests/mobile.test.js && node tests/voice.test.js && node tests/performance.test.js",
+    "test": "node tests/suite.js && node tests/i18n.test.js && node tests/workflow.test.js && node tests/themes-reading.test.js && node tests/animations.test.js && node tests/support.test.js && node tests/ux-audit.test.js && node tests/web.test.js && node tests/mobile.test.js && node tests/voice.test.js && node tests/performance.test.js && node tests/release-upgrade.test.js",
     "preview": "vite preview",
     "tauri": "tauri"
   },
@@ -27,6 +27,8 @@
     "@tauri-apps/api": "^2.2.0",
     "@tauri-apps/plugin-dialog": "^2.2.0",
     "@tauri-apps/plugin-fs": "^2.2.0",
+    "@tauri-apps/plugin-process": "^2.4.0",
+    "@tauri-apps/plugin-updater": "^2.14.1",
     "@types/qrcode": "^1.5.6",
     "clsx": "^2.1.1",
     "dompurify": "^3.4.17",

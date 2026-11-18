@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { History, RotateCcw, X, Clock, Plus, Check } from 'lucide-react';
 import { Note, NoteVersion } from '../../types';
 import { api } from '../../services/api';
+import { useTranslation } from '../../i18n';
+import { useDialogA11y } from '../../hooks/useDialogA11y';
+import { ContextualHint } from '../ui/ContextualHint';
 
 interface VersionHistoryDialogProps {
   isOpen: boolean;
@@ -20,11 +23,25 @@ export const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
   currentContent,
   onVersionRestored,
 }) => {
+  const { t, format } = useTranslation();
   const [versions, setVersions] = useState<NoteVersion[]>([]);
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [saveVersionFeedback, setSaveVersionFeedback] = useState(false);
+  const [isCompactModal, setIsCompactModal] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.innerWidth <= 680 : false
+  );
+
+  useDialogA11y({ isOpen, onClose });
+
+  useEffect(() => {
+    if (!isOpen || typeof window === 'undefined') return;
+    const handleResize = () => setIsCompactModal(window.innerWidth <= 680);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen || !noteId) return;
@@ -53,18 +70,6 @@ export const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
       isMounted = false;
     };
   }, [isOpen, noteId]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -101,7 +106,7 @@ export const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
 
   const formatTimestamp = (ts: number) => {
     const d = new Date(ts);
-    return d.toLocaleString('pt-BR', {
+    return d.toLocaleString(t.meta.dateLocale, {
       day: '2-digit',
       month: 'short',
       hour: '2-digit',
@@ -120,17 +125,20 @@ export const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 9999,
-        padding: '20px',
+        padding:
+          'max(12px, env(safe-area-inset-top, 12px)) 12px max(12px, env(safe-area-inset-bottom, 12px)) 12px',
+        boxSizing: 'border-box',
         animation: 'fadeIn var(--transition-fast) ease-out',
       }}
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={t.dialogs.versionTitle}
         style={{
-          width: '840px',
-          maxWidth: '95vw',
-          height: '560px',
-          maxHeight: '90vh',
+          width: 'min(95vw, 840px)',
+          height: 'min(90dvh, var(--nook-viewport-height, 90dvh), 580px)',
           backgroundColor: 'var(--bg-elevated)',
           border: '1px solid var(--border-color)',
           borderRadius: 'var(--radius-lg)',
@@ -144,11 +152,13 @@ export const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
         {/* Header */}
         <div
           style={{
-            height: '52px',
-            padding: '0 18px',
+            minHeight: '52px',
+            padding: '10px 16px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '8px',
             borderBottom: '1px solid var(--border-subtle)',
           }}
         >
@@ -156,10 +166,10 @@ export const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
             <History size={18} style={{ color: 'var(--text-secondary)' }} />
             <div>
               <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                Versões Anteriores
+                {t.dialogs.versionTitle}
               </div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                Volte para qualquer versão salva desta nota sempre que precisar
+                {t.dialogs.versionSubtitle}
               </div>
             </div>
           </div>
@@ -180,10 +190,10 @@ export const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
                 fontWeight: 500,
                 cursor: 'pointer',
               }}
-              title="Guardar uma cópia da versão atual da nota"
+              title={t.dialogs.saveCurrentTooltip}
             >
               {saveVersionFeedback ? <Check size={14} style={{ color: 'var(--text-primary)' }} /> : <Plus size={14} />}
-              {saveVersionFeedback ? 'Versão Salva!' : 'Salvar Versão Atual'}
+              {saveVersionFeedback ? t.dialogs.versionSaved : t.dialogs.saveCurrentVersion}
             </button>
 
             <button
@@ -198,23 +208,44 @@ export const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
               }}
               onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
               onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+              aria-label={t.common.close}
             >
               <X size={16} />
             </button>
           </div>
         </div>
 
+        <div style={{ padding: '8px 14px', borderBottom: '1px solid var(--border-subtle)' }}>
+          <ContextualHint
+            tipId="history"
+            title={t.ux.tipHistoryTitle}
+            description={t.ux.tipHistoryDesc}
+            compact
+          />
+        </div>
+
         {/* Content Body: Sidebar list + Main Preview */}
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: isCompactModal ? 'column' : 'row',
+            overflow: 'hidden',
+            minHeight: 0,
+          }}
+        >
           {/* Versions List */}
           <div
             style={{
-              width: '260px',
-              borderRight: '1px solid var(--border-subtle)',
+              width: isCompactModal ? '100%' : '260px',
+              maxHeight: isCompactModal ? '170px' : 'none',
+              borderRight: isCompactModal ? 'none' : '1px solid var(--border-subtle)',
+              borderBottom: isCompactModal ? '1px solid var(--border-subtle)' : 'none',
               backgroundColor: 'var(--bg-sidebar)',
               overflowY: 'auto',
               display: 'flex',
               flexDirection: 'column',
+              flexShrink: 0,
             }}
           >
             <div
@@ -228,20 +259,20 @@ export const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
                 borderBottom: '1px solid var(--border-subtle)',
               }}
             >
-              VERSÕES SALVAS ({versions.length})
+              {format(t.dialogs.savedVersions, { count: versions.length })}
             </div>
 
             {isLoading && (
               <div style={{ padding: '24px', textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)' }}>
-                Carregando versões...
+                {t.dialogs.loadingVersions}
               </div>
             )}
 
             {!isLoading && versions.length === 0 && (
               <div style={{ padding: '32px 16px', textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <Clock size={28} style={{ opacity: 0.45, margin: '0 auto 6px auto', display: 'block' }} />
-                <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>Nenhuma versão anterior</span>
-                <span style={{ lineHeight: 1.4 }}>O Nook guarda cópias automáticas a cada 5 minutos de escrita para você nunca perder nada.</span>
+                <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>{t.dialogs.noPreviousVersions}</span>
+                <span style={{ lineHeight: 1.4 }}>{t.dialogs.autoVersionsHint}</span>
               </div>
             )}
 
@@ -294,13 +325,13 @@ export const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
                             color: 'var(--text-muted)',
                           }}
                         >
-                          Mais recente
+                          {t.dialogs.latestBadge}
                         </span>
                       )}
                     </div>
 
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {v.title || 'Sem título'} • {v.content.length} caracteres
+                      {v.title || t.common.untitled} • {format(t.dialogs.charsCount, { count: v.content.length })}
                     </div>
                   </button>
                 );
@@ -321,11 +352,13 @@ export const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
               <>
                 <div
                   style={{
-                    padding: '12px 18px',
+                    padding: '12px 16px',
                     borderBottom: '1px solid var(--border-subtle)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '10px',
                   }}
                 >
                   <div>
@@ -333,7 +366,7 @@ export const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
                       {selectedVersion.title}
                     </div>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                      Salva em {formatTimestamp(selectedVersion.created_at)}
+                      {format(t.dialogs.savedAt, { date: formatTimestamp(selectedVersion.created_at) })}
                     </div>
                   </div>
 
@@ -356,7 +389,7 @@ export const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
                     }}
                   >
                     <RotateCcw size={13} />
-                    {isRestoring ? 'Restaurando...' : 'Restaurar esta versão'}
+                    {isRestoring ? t.common.restoring : t.dialogs.restoreThisVersion}
                   </button>
                 </div>
 
@@ -373,7 +406,7 @@ export const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
                     wordBreak: 'break-word',
                   }}
                 >
-                  {selectedVersion.content || <em style={{ color: 'var(--text-muted)' }}>Nota vazia nesta versão</em>}
+                  {selectedVersion.content || <em style={{ color: 'var(--text-muted)' }}>{t.dialogs.emptyNoteInVersion}</em>}
                 </div>
               </>
             ) : (
@@ -387,7 +420,7 @@ export const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
                   fontSize: '13px',
                 }}
               >
-                Selecione uma versão na lista ao lado para ver o texto salvo.
+                {t.dialogs.selectVersionPrompt}
               </div>
             )}
           </div>

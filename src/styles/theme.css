@@ -1,28 +1,30 @@
 :root,
 [data-theme="gray"] {
   /* ==========================================================================
-     THEME 1: GRAY (Cinza / Grafite Moderno - Padrão Elegante e Confortável)
+     THEME 1: GRAY (Cinza — Padrão Original: Grafite Equilibrado e Monocromático)
      ========================================================================== */
   --background: #1E1F24;
   --foreground: #ECECEC;
-  
+
   --card: #26282E;
   --card-foreground: #ECECEC;
-  
+
   --popover: #26282E;
   --popover-foreground: #ECECEC;
-  
+
   --primary: #ECECEC;
   --primary-foreground: #1E1F24;
-  
+
   --secondary: #2C2E35;
   --secondary-foreground: #ECECEC;
-  
+
   --muted: #282A31;
-  --muted-foreground: #9B9FA9;
-  
+  --muted-foreground: #9FA3AE;
+
   --accent: #ECECEC;
   --accent-foreground: #1E1F24;
+  --accent-secondary: #D4D6DC;
+  --accent-secondary-foreground: #1E1F24;
   --accent-hover: #FFFFFF;
   --accent-muted: rgba(255, 255, 255, 0.08);
   --accent-border: rgba(255, 255, 255, 0.16);
@@ -32,18 +34,15 @@
   --danger: #EF4444;
   --danger-hover: #DC2626;
   --danger-muted: rgba(239, 68, 68, 0.12);
-  
+
   --success: #22C55E;
   --warning: #F59E0B;
 
   --border: #33363F;
   --input: #33363F;
   --ring: rgba(255, 255, 255, 0.25);
-
-  --radius: 8px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 10px;
+  --focus-glow: none;
+  --elevation-shadow: 0 12px 32px rgba(0, 0, 0, 0.36);
 
   --bg-main: #1E1F24;
   --bg-sidebar: #17181C;
@@ -53,11 +52,38 @@
   --bg-selected: rgba(255, 255, 255, 0.10);
   --border-color: #33363F;
   --border-subtle: #292B33;
-  
+
   --text-primary: #ECECEC;
-  --text-secondary: #B0B4BF;
-  --text-muted: #747885;
+  --text-secondary: #B4B8C4;
+  --text-muted: #848996;
   --text-disabled: #4B4E58;
+
+  /* Editorial Reading & Editor Tokens */
+  --nook-reading-measure: 70ch;
+  --nook-paragraph-gap: 1.05em;
+  --nook-line-height: 1.65;
+
+  --md-heading-color: #F6F7F9;
+  --md-heading-border: rgba(255, 255, 255, 0.08);
+  --md-strong-color: #FFFFFF;
+  --md-link-color: #ECECEC;
+  --md-link-underline: rgba(236, 236, 236, 0.45);
+  --md-blockquote-border: #4A4E59;
+  --md-blockquote-bg: rgba(255, 255, 255, 0.025);
+  --md-blockquote-text: #B4B8C4;
+  --md-code-bg: #17181D;
+  --md-code-header-bg: #1F2127;
+  --md-code-border: #2F323B;
+  --md-code-text: #E5E7EB;
+  --md-inline-code-bg: rgba(255, 255, 255, 0.07);
+  --md-inline-code-border: rgba(255, 255, 255, 0.11);
+  --md-hr-color: rgba(255, 255, 255, 0.10);
+  --md-table-header-bg: #25272E;
+  --md-table-stripe-bg: rgba(255, 255, 255, 0.02);
+  --md-selection-bg: rgba(255, 255, 255, 0.16);
+  --md-selection-text: inherit;
+  --cm-active-line-bg: rgba(255, 255, 255, 0.028);
+  --cm-syntax-meta: #6E7382;
 
   --transition-fast: 120ms cubic-bezier(0.16, 1, 0.3, 1);
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", Roboto, sans-serif;
@@ -67,183 +93,256 @@
 [data-theme="dark"],
 [data-theme="oled"] {
   /* ==========================================================================
-     THEME 2: DARK (Preto Puro / Profundo - Alto Contraste Monocromático)
+     THEME 2: DARK (Escuro — Concentração Absoluta & Silêncio Visual)
      ========================================================================== */
-  --background: #0D0E11;
-  --foreground: #F4F4F6;
-  
-  --card: #14161B;
-  --card-foreground: #F4F4F6;
-  
-  --popover: #14161B;
-  --popover-foreground: #F4F4F6;
-  
-  --primary: #F4F4F6;
-  --primary-foreground: #0D0E11;
-  
-  --secondary: #1B1E24;
-  --secondary-foreground: #F4F4F6;
-  
-  --muted: #181A20;
-  --muted-foreground: #9496A1;
-  
-  --accent: #FFFFFF;
-  --accent-foreground: #0D0E11;
+  --background: #090A0D;
+  --foreground: #E7E9EE;
+
+  --card: #111318;
+  --card-foreground: #E7E9EE;
+
+  --popover: #111318;
+  --popover-foreground: #E7E9EE;
+
+  --primary: #F0F2F5;
+  --primary-foreground: #090A0D;
+
+  --secondary: #171920;
+  --secondary-foreground: #E7E9EE;
+
+  --muted: #14161C;
+  --muted-foreground: #9297A5;
+
+  --accent: #F4F5F8;
+  --accent-foreground: #090A0D;
+  --accent-secondary: #C8CCD6;
+  --accent-secondary-foreground: #090A0D;
   --accent-hover: #FFFFFF;
-  --accent-muted: rgba(255, 255, 255, 0.10);
-  --accent-border: rgba(255, 255, 255, 0.20);
-  
+  --accent-muted: rgba(255, 255, 255, 0.09);
+  --accent-border: rgba(255, 255, 255, 0.18);
+
   --destructive: #EF4444;
   --destructive-foreground: #FAFAFA;
   --danger: #EF4444;
   --danger-hover: #DC2626;
   --danger-muted: rgba(239, 68, 68, 0.12);
-  
+
   --success: #22C55E;
   --warning: #F59E0B;
-  
-  --border: #22252D;
-  --input: #22252D;
-  --ring: rgba(255, 255, 255, 0.25);
 
-  --bg-main: #0D0E11;
-  --bg-sidebar: #07080A;
-  --bg-elevated: #14161B;
-  --bg-elevated-hover: #1D2028;
-  --bg-hover: rgba(255, 255, 255, 0.06);
-  --bg-selected: rgba(255, 255, 255, 0.11);
-  --border-color: #22252D;
-  --border-subtle: #171920;
-  
-  --text-primary: #F4F4F6;
-  --text-secondary: #A0A3AE;
-  --text-muted: #666974;
-  --text-disabled: #42444D;
+  --border: #1D2028;
+  --input: #1D2028;
+  --ring: rgba(255, 255, 255, 0.28);
+  --focus-glow: none;
+  --elevation-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+
+  --bg-main: #090A0D;
+  --bg-sidebar: #050608;
+  --bg-elevated: #111318;
+  --bg-elevated-hover: #191C24;
+  --bg-hover: rgba(255, 255, 255, 0.055);
+  --bg-selected: rgba(255, 255, 255, 0.10);
+  --border-color: #1D2028;
+  --border-subtle: #14171D;
+
+  --text-primary: #E7E9EE;
+  --text-secondary: #A1A6B3;
+  --text-muted: #707582;
+  --text-disabled: #3D404A;
+
+  --md-heading-color: #F7F8FA;
+  --md-heading-border: rgba(255, 255, 255, 0.07);
+  --md-strong-color: #FFFFFF;
+  --md-link-color: #F0F2F5;
+  --md-link-underline: rgba(240, 242, 245, 0.42);
+  --md-blockquote-border: #343844;
+  --md-blockquote-bg: rgba(255, 255, 255, 0.02);
+  --md-blockquote-text: #A1A6B3;
+  --md-code-bg: #0D0F13;
+  --md-code-header-bg: #13161C;
+  --md-code-border: #1E212B;
+  --md-code-text: #E2E5EC;
+  --md-inline-code-bg: rgba(255, 255, 255, 0.065);
+  --md-inline-code-border: rgba(255, 255, 255, 0.10);
+  --md-hr-color: rgba(255, 255, 255, 0.08);
+  --md-table-header-bg: #12141A;
+  --md-table-stripe-bg: rgba(255, 255, 255, 0.02);
+  --md-selection-bg: rgba(255, 255, 255, 0.16);
+  --md-selection-text: inherit;
+  --cm-active-line-bg: rgba(255, 255, 255, 0.026);
+  --cm-syntax-meta: #5E6370;
 }
 
 [data-theme="white"],
 [data-theme="light"] {
   /* ==========================================================================
-     THEME 3: WHITE (Branco / Clean Minimalist - Papel e Design Suíço)
+     THEME 3: WHITE (Claro — Papel Digital Editorial & Alta Legibilidade)
      ========================================================================== */
-  --background: #FFFFFF;
-  --foreground: #18181B;
-  
-  --card: #FFFFFF;
-  --card-foreground: #18181B;
-  
-  --popover: #FFFFFF;
-  --popover-foreground: #18181B;
-  
-  --primary: #18181B;
-  --primary-foreground: #FFFFFF;
-  
-  --secondary: #F4F4F6;
-  --secondary-foreground: #18181B;
-  
-  --muted: #F4F4F6;
-  --muted-foreground: #6B7280;
-  
-  --accent: #18181B;
-  --accent-foreground: #FFFFFF;
-  --accent-hover: #09090B;
-  --accent-muted: rgba(0, 0, 0, 0.06);
-  --accent-border: rgba(0, 0, 0, 0.14);
-  
-  --destructive: #EF4444;
-  --destructive-foreground: #FAFAFA;
-  --danger: #EF4444;
-  --danger-hover: #DC2626;
-  --danger-muted: rgba(239, 68, 68, 0.08);
-  
-  --success: #16A34A;
-  --warning: #D97706;
-  
-  --border: #E4E5E9;
-  --input: #E4E5E9;
-  --ring: rgba(24, 24, 27, 0.25);
+  --background: #FAF9F6;
+  --foreground: #1A1A1E;
 
-  --bg-main: #FFFFFF;
-  --bg-sidebar: #F7F8FA;
+  --card: #FFFFFF;
+  --card-foreground: #1A1A1E;
+
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1A1E;
+
+  --primary: #1A1A1E;
+  --primary-foreground: #FAF9F6;
+
+  --secondary: #F2F0EB;
+  --secondary-foreground: #1A1A1E;
+
+  --muted: #F0EEE9;
+  --muted-foreground: #5E636E;
+
+  --accent: #1A1A1E;
+  --accent-foreground: #FFFFFF;
+  --accent-secondary: #3F3F46;
+  --accent-secondary-foreground: #FFFFFF;
+  --accent-hover: #09090B;
+  --accent-muted: rgba(26, 26, 30, 0.06);
+  --accent-border: rgba(26, 26, 30, 0.16);
+
+  --destructive: #DC2626;
+  --destructive-foreground: #FAFAFA;
+  --danger: #DC2626;
+  --danger-hover: #B91C1C;
+  --danger-muted: rgba(220, 38, 38, 0.08);
+
+  --success: #15803D;
+  --warning: #B45309;
+
+  --border: #E5E2DA;
+  --input: #E5E2DA;
+  --ring: rgba(26, 26, 30, 0.28);
+  --focus-glow: none;
+  --elevation-shadow: 0 10px 28px rgba(24, 24, 27, 0.08);
+
+  --bg-main: #FAF9F6;
+  --bg-sidebar: #F3F1EC;
   --bg-elevated: #FFFFFF;
-  --bg-elevated-hover: #F1F3F6;
-  --bg-hover: rgba(0, 0, 0, 0.04);
-  --bg-selected: rgba(0, 0, 0, 0.08);
-  --border-color: #E4E5E9;
-  --border-subtle: #EDEEF2;
-  
-  --text-primary: #18181B;
-  --text-secondary: #4B515D;
-  --text-muted: #838896;
-  --text-disabled: #A8ACB8;
+  --bg-elevated-hover: #F5F3EE;
+  --bg-hover: rgba(24, 24, 27, 0.045);
+  --bg-selected: rgba(24, 24, 27, 0.08);
+  --border-color: #E5E2DA;
+  --border-subtle: #EDEBE4;
+
+  --text-primary: #1A1A1E;
+  --text-secondary: #484C56;
+  --text-muted: #6E727D;
+  --text-disabled: #A1A5B0;
+
+  --md-heading-color: #111114;
+  --md-heading-border: rgba(26, 26, 30, 0.10);
+  --md-strong-color: #09090B;
+  --md-link-color: #1A1A1E;
+  --md-link-underline: rgba(26, 26, 30, 0.45);
+  --md-blockquote-border: #C7C3B8;
+  --md-blockquote-bg: rgba(24, 24, 27, 0.025);
+  --md-blockquote-text: #484C56;
+  --md-code-bg: #F3F1EC;
+  --md-code-header-bg: #EAE7E0;
+  --md-code-border: #DEDAD0;
+  --md-code-text: #1F2328;
+  --md-inline-code-bg: rgba(24, 24, 27, 0.055);
+  --md-inline-code-border: rgba(24, 24, 27, 0.10);
+  --md-hr-color: rgba(24, 24, 27, 0.11);
+  --md-table-header-bg: #F2F0EA;
+  --md-table-stripe-bg: rgba(24, 24, 27, 0.02);
+  --md-selection-bg: rgba(24, 24, 27, 0.12);
+  --md-selection-text: #111114;
+  --cm-active-line-bg: rgba(24, 24, 27, 0.03);
+  --cm-syntax-meta: #8A8E99;
 }
 
 [data-theme="neon"] {
   /* ==========================================================================
-     THEME 4: NEON (CMD Hacking / Cibersegurança: Preto, Verde Neon e Branco)
-     Apenas 1 único tom de verde (#00FF9D). Zero azul/cyan e sem misturar verdes.
-     Estética de Terminal Hacker: Fundo preto puro, texto branco nítido, realces em verde neon.
+     THEME 4: NEON (Cybersecurity / Terminal — Grafite Escuro, Branco e Verde #00FF9D)
+     Apenas 1 único tom de verde (#00FF9D). Zero azul/cyan e zero segundo verde.
      ========================================================================== */
-  --background: #000000;
-  --foreground: #FFFFFF;
-  
-  --card: #0A0A0A;
-  --card-foreground: #FFFFFF;
-  
-  --popover: #0A0A0A;
-  --popover-foreground: #FFFFFF;
-  
+  --background: #060908;
+  --foreground: #F1F5F4;
+
+  --card: #0B100E;
+  --card-foreground: #F1F5F4;
+
+  --popover: #0B100E;
+  --popover-foreground: #F1F5F4;
+
   --primary: #00FF9D;
-  --primary-foreground: #000000;
-  
-  --secondary: #121212;
+  --primary-foreground: #040706;
+
+  --secondary: #101614;
   --secondary-foreground: #00FF9D;
-  
-  --muted: #121212;
-  --muted-foreground: #666666;
-  
+
+  --muted: #101614;
+  --muted-foreground: #7B8783;
+
   --accent: #00FF9D;
-  --accent-foreground: #000000;
+  --accent-foreground: #040706;
   --accent-secondary: #00FF9D;
-  --accent-secondary-foreground: #000000;
+  --accent-secondary-foreground: #040706;
   --accent-hover: #00FF9D;
-  --accent-muted: rgba(0, 255, 157, 0.12);
-  --accent-border: rgba(0, 255, 157, 0.35);
-  
+  --accent-muted: rgba(0, 255, 157, 0.10);
+  --accent-border: rgba(0, 255, 157, 0.34);
+
   --destructive: #FF3B30;
   --destructive-foreground: #FFFFFF;
   --danger: #FF3B30;
   --danger-hover: #E0281D;
   --danger-muted: rgba(255, 59, 48, 0.15);
-  
+
   --success: #00FF9D;
   --warning: #FFD60A;
-  
-  --border: #1A1A1A;
-  --input: #1A1A1A;
-  --ring: rgba(0, 255, 157, 0.45);
 
-  --bg-main: #000000;
-  --bg-sidebar: #050505;
-  --bg-elevated: #0C0C0C;
-  --bg-elevated-hover: #141414;
-  --bg-hover: rgba(0, 255, 157, 0.08);
-  --bg-selected: rgba(0, 255, 157, 0.15);
-  --border-color: #1A1A1A;
-  --border-subtle: #121212;
-  
-  --text-primary: #FFFFFF;
-  --text-secondary: #A1A1AA;
-  --text-muted: #666666;
-  --text-disabled: #383838;
+  --border: #19221F;
+  --input: #19221F;
+  --ring: rgba(0, 255, 157, 0.45);
+  --focus-glow: 0 0 12px rgba(0, 255, 157, 0.16);
+  --elevation-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 1px rgba(0, 255, 157, 0.18);
+
+  --bg-main: #060908;
+  --bg-sidebar: #030505;
+  --bg-elevated: #0B100E;
+  --bg-elevated-hover: #121A17;
+  --bg-hover: rgba(0, 255, 157, 0.07);
+  --bg-selected: rgba(0, 255, 157, 0.12);
+  --border-color: #19221F;
+  --border-subtle: #111815;
+
+  --text-primary: #F1F5F4;
+  --text-secondary: #A4B0AC;
+  --text-muted: #76837F;
+  --text-disabled: #3A423F;
+
+  --md-heading-color: #FFFFFF;
+  --md-heading-border: rgba(0, 255, 157, 0.18);
+  --md-strong-color: #FFFFFF;
+  --md-link-color: #00FF9D;
+  --md-link-underline: rgba(0, 255, 157, 0.48);
+  --md-blockquote-border: rgba(0, 255, 157, 0.55);
+  --md-blockquote-bg: rgba(0, 255, 157, 0.03);
+  --md-blockquote-text: #B4C0BC;
+  --md-code-bg: #080C0B;
+  --md-code-header-bg: #0D1412;
+  --md-code-border: rgba(0, 255, 157, 0.20);
+  --md-code-text: #ECF2EF;
+  --md-inline-code-bg: rgba(0, 255, 157, 0.08);
+  --md-inline-code-border: rgba(0, 255, 157, 0.20);
+  --md-hr-color: rgba(0, 255, 157, 0.16);
+  --md-table-header-bg: #0D1311;
+  --md-table-stripe-bg: rgba(0, 255, 157, 0.025);
+  --md-selection-bg: rgba(0, 255, 157, 0.20);
+  --md-selection-text: #FFFFFF;
+  --cm-active-line-bg: rgba(0, 255, 157, 0.032);
+  --cm-syntax-meta: rgba(0, 255, 157, 0.58);
 }
 
-/* ==========================================================================
-   NEON TERMINAL SPECIFIC COHESION (CMD / Cibersegurança)
-   ========================================================================== */
+/* Neon Subtle Cohesion Rules */
 [data-theme="neon"] ::selection,
 [data-theme="neon"] .cm-selectionBackground {
-  background-color: rgba(0, 255, 157, 0.22) !important;
+  background-color: rgba(0, 255, 157, 0.20) !important;
   color: #FFFFFF !important;
 }
 
@@ -257,14 +356,15 @@
 }
 
 [data-theme="neon"] .tab-btn.active {
-  background-color: rgba(0, 255, 157, 0.12) !important;
+  background-color: rgba(0, 255, 157, 0.11) !important;
   color: #00FF9D !important;
   border-left: 2px solid #00FF9D !important;
+  box-shadow: inset 0 0 12px rgba(0, 255, 157, 0.05);
 }
 
 [data-theme="neon"] .tree-note-item:hover,
 [data-theme="neon"] .tree-item:hover {
-  background-color: rgba(0, 255, 157, 0.08) !important;
+  background-color: rgba(0, 255, 157, 0.07) !important;
 }
 
 [data-theme="neon"] a.nook-link,
@@ -272,59 +372,105 @@
   color: #00FF9D !important;
 }
 
+[data-theme="neon"] .markdown-body-rendered li::marker {
+  color: #00FF9D;
+}
+
+[data-theme="neon"] .btn-primary:hover,
+[data-theme="neon"] .nook-btn-primary:hover {
+  box-shadow: var(--focus-glow);
+}
+
 [data-theme="sakura"],
 [data-theme="pink"] {
   /* ==========================================================================
-     THEME 5: SAKURA (Delicado e Minimalista)
+     THEME 5: SAKURA (Jardim Japonês Minimalista — Grafite Ameixa & Rosa Antigo)
      ========================================================================== */
-  --background: #151115;
-  --foreground: #FDF2F8;
-  
-  --card: #1D181E;
-  --card-foreground: #FDF2F8;
-  
-  --popover: #1D181E;
-  --popover-foreground: #FDF2F8;
-  
-  --primary: #F472B6;
-  --primary-foreground: #151115;
-  
-  --secondary: #241D25;
-  --secondary-foreground: #FDF2F8;
-  
-  --muted: #201921;
-  --muted-foreground: #C098AB;
-  
-  --accent: #F472B6;
-  --accent-foreground: #151115;
-  --accent-hover: #FB7185;
-  --accent-muted: rgba(244, 114, 182, 0.15);
-  --accent-border: rgba(244, 114, 182, 0.30);
-  
+  --background: #161217;
+  --foreground: #F6EEF2;
+
+  --card: #1F1921;
+  --card-foreground: #F6EEF2;
+
+  --popover: #1F1921;
+  --popover-foreground: #F6EEF2;
+
+  --primary: #E89EB8;
+  --primary-foreground: #161217;
+
+  --secondary: #261E27;
+  --secondary-foreground: #F6EEF2;
+
+  --muted: #221B23;
+  --muted-foreground: #B89DAA;
+
+  --accent: #E89EB8;
+  --accent-foreground: #161217;
+  --accent-secondary: #D485A1;
+  --accent-secondary-foreground: #161217;
+  --accent-hover: #F0B0C6;
+  --accent-muted: rgba(232, 158, 184, 0.13);
+  --accent-border: rgba(232, 158, 184, 0.28);
+
   --destructive: #F43F5E;
   --destructive-foreground: #FAFAFA;
   --danger: #F43F5E;
   --danger-hover: #E11D48;
   --danger-muted: rgba(244, 63, 94, 0.14);
-  
+
   --success: #34D399;
   --warning: #FBBF24;
-  
-  --border: #2C212D;
-  --input: #2C212D;
-  --ring: rgba(244, 114, 182, 0.35);
 
-  --bg-main: #151115;
-  --bg-sidebar: #0F0C0F;
-  --bg-elevated: #1D181E;
-  --bg-elevated-hover: #262028;
-  --bg-hover: rgba(244, 114, 182, 0.08);
-  --bg-selected: rgba(244, 114, 182, 0.15);
-  --border-color: #2C212D;
-  --border-subtle: #1E161F;
-  
-  --text-primary: #FDF2F8;
-  --text-secondary: #D4A5BA;
-  --text-muted: #826071;
-  --text-disabled: #4F3844;
+  --border: #2F2531;
+  --input: #2F2531;
+  --ring: rgba(232, 158, 184, 0.36);
+  --focus-glow: 0 0 12px rgba(232, 158, 184, 0.12);
+  --elevation-shadow: 0 14px 36px rgba(10, 6, 12, 0.55);
+
+  --bg-main: #161217;
+  --bg-sidebar: #100C11;
+  --bg-elevated: #1F1921;
+  --bg-elevated-hover: #29212B;
+  --bg-hover: rgba(232, 158, 184, 0.075);
+  --bg-selected: rgba(232, 158, 184, 0.13);
+  --border-color: #2F2531;
+  --border-subtle: #221A24;
+
+  --text-primary: #F6EEF2;
+  --text-secondary: #C8B2BD;
+  --text-muted: #927986;
+  --text-disabled: #55424D;
+
+  --md-heading-color: #FCF7FA;
+  --md-heading-border: rgba(232, 158, 184, 0.18);
+  --md-strong-color: #FFFFFF;
+  --md-link-color: #E89EB8;
+  --md-link-underline: rgba(232, 158, 184, 0.45);
+  --md-blockquote-border: rgba(232, 158, 184, 0.42);
+  --md-blockquote-bg: rgba(232, 158, 184, 0.03);
+  --md-blockquote-text: #CDBAC3;
+  --md-code-bg: #120E13;
+  --md-code-header-bg: #1B151D;
+  --md-code-border: #322734;
+  --md-code-text: #F2E7ED;
+  --md-inline-code-bg: rgba(232, 158, 184, 0.09);
+  --md-inline-code-border: rgba(232, 158, 184, 0.20);
+  --md-hr-color: rgba(232, 158, 184, 0.16);
+  --md-table-header-bg: #201922;
+  --md-table-stripe-bg: rgba(232, 158, 184, 0.025);
+  --md-selection-bg: rgba(232, 158, 184, 0.22);
+  --md-selection-text: #FFFFFF;
+  --cm-active-line-bg: rgba(232, 158, 184, 0.032);
+  --cm-syntax-meta: #B08898;
+}
+
+[data-theme="sakura"] .tab-item.active,
+[data-theme="pink"] .tab-item.active {
+  border-bottom: 2px solid #E89EB8 !important;
+  color: #FCF7FA !important;
+}
+
+[data-theme="sakura"] .markdown-body-rendered li::marker,
+[data-theme="pink"] .markdown-body-rendered li::marker {
+  color: #E89EB8;
 }

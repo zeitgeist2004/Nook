@@ -70,6 +70,41 @@ pub struct AutoBackupInfo {
     pub path: String,
     pub size_bytes: u64,
     pub created_at: i64,
+    #[serde(default)]
+    pub is_auto: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AutoBackupSummary {
+    pub enabled: bool,
+    pub frequency: String,
+    pub retention_days: u32,
+    pub count: usize,
+    pub total_size_bytes: u64,
+    pub last_backup_at: Option<i64>,
+    pub next_backup_at: Option<i64>,
+    pub backups: Vec<AutoBackupInfo>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeleteBackupsResult {
+    pub deleted_count: usize,
+    pub freed_bytes: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CacheStats {
+    pub cache_size_bytes: u64,
+    pub cache_file_count: usize,
+    pub cache_dir_path: String,
+    pub webview_requires_restart: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClearCacheResult {
+    pub deleted_files: usize,
+    pub freed_bytes: u64,
+    pub webview_requires_restart: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -47,8 +47,22 @@ pub async fn auth_verify(
     headers: HeaderMap,
     State(state): State<ServerState>,
 ) -> Response {
+    let lang = state
+        .db
+        .conn
+        .lock()
+        .ok()
+        .map(|c| crate::commands::settings::get_active_language(&c))
+        .unwrap_or_else(|| "pt".to_string());
+
     if validate_host(&headers, state.port).is_err() {
-        return (StatusCode::FORBIDDEN, Html("<h1>Host inválido</h1>")).into_response();
+        let invalid_host = crate::commands::settings::pick_lang(
+            &lang,
+            "<h1>Host inválido</h1>",
+            "<h1>Invalid host</h1>",
+            "<h1>Host inválido</h1>",
+        );
+        return (StatusCode::FORBIDDEN, Html(invalid_host)).into_response();
     }
 
     // 1. If user already has an active, valid session cookie, redirect immediately to root
@@ -76,30 +90,59 @@ pub async fn auth_verify(
     }
 
     // 3. Fallback: Invalid or expired token (monochrome Nook branding)
-    let error_html = r#"<!DOCTYPE html>
-<html lang="pt-BR">
+    let (html_lang, page_title, heading, body1, body2, hint) = match crate::commands::settings::normalize_lang(&lang) {
+        "en" => (
+            "en",
+            "Nook Web — Authorization",
+            "Session Expired or Unauthorized",
+            "Authorization token is invalid or has already been used. Please reopen from Nook Desktop.",
+            "To open Nook Web, open the Nook app on your computer and click the <strong>\"Web\"</strong> button in the header.",
+            "Nook • 100% Offline &amp; Private",
+        ),
+        "es" => (
+            "es",
+            "Nook Web — Autorización",
+            "Sesión Expirada o No Autorizada",
+            "El token de autorización es inválido o ya fue utilizado. Por favor, vuelve a abrirlo desde Nook Desktop.",
+            "Para abrir Nook Web, abre la app de Nook en tu equipo y haz clic en el botón <strong>\"Web\"</strong> en el encabezado.",
+            "Nook • 100% Sin conexión y Privado",
+        ),
+        _ => (
+            "pt-BR",
+            "Nook Web — Autorização",
+            "Sessão Expirada ou Não Autorizada",
+            "Token de autorização inválido ou já utilizado. Por favor, reabra pelo Nook Desktop.",
+            "Para abrir o Nook Web, abra o aplicativo Nook no computador e clique no botão <strong>\"Web\"</strong> no cabeçalho.",
+            "Nook • 100% Offline e Privado",
+        ),
+    };
+
+    let error_html = format!(
+        r#"<!DOCTYPE html>
+<html lang="{html_lang}">
 <head>
   <meta charset="UTF-8">
-  <title>Nook Web — Autorização</title>
+  <title>{page_title}</title>
   <style>
-    body { background-color: #0D0E11; color: #ECEAE5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; user-select: none; }
-    .card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 36px 32px; max-width: 440px; text-align: center; }
-    h2 { font-size: 18px; margin-bottom: 12px; color: #FFFFFF; font-weight: 600; }
-    p { font-size: 13px; line-height: 1.6; color: #8E929E; margin-bottom: 16px; }
-    .hint { font-size: 11px; color: #5B5F6C; margin-top: 16px; }
+    body {{ background-color: #0D0E11; color: #ECEAE5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; user-select: none; }}
+    .card {{ background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 36px 32px; max-width: 440px; text-align: center; }}
+    h2 {{ font-size: 18px; margin-bottom: 12px; color: #FFFFFF; font-weight: 600; }}
+    p {{ font-size: 13px; line-height: 1.6; color: #8E929E; margin-bottom: 16px; }}
+    .hint {{ font-size: 11px; color: #5B5F6C; margin-top: 16px; }}
   </style>
 </head>
 <body>
   <div class="card">
-    <h2>Sessão Expirada ou Não Autorizada</h2>
-    <p>Token de autorização inválido ou já utilizado. Por favor, reabra pelo Nook Desktop.</p>
-    <p style="color: #FFFFFF; font-size: 12px; font-weight: 500;">Para abrir o Nook Web, abra o aplicativo Nook no computador e clique no botão <strong>"Web"</strong> no cabeçalho.</p>
-    <div class="hint">Nook • 100% Offline e Privado</div>
+    <h2>{heading}</h2>
+    <p>{body1}</p>
+    <p style="color: #FFFFFF; font-size: 12px; font-weight: 500;">{body2}</p>
+    <div class="hint">{hint}</div>
   </div>
 </body>
-</html>"#;
+</html>"#
+    );
 
-    (StatusCode::FORBIDDEN, Html(error_html.to_string())).into_response()
+    (StatusCode::FORBIDDEN, Html(error_html)).into_response()
 }
 
 // ----------------------------------------------------------------------------
@@ -110,6 +153,7 @@ pub struct StatusResponse {
     pub status: &'static str,
     pub app: &'static str,
     pub version: &'static str,
+    pub build_id: &'static str,
     pub port: u16,
     pub desktop_running: bool,
 }
@@ -122,7 +166,8 @@ pub async fn get_status(
     Ok(Json(StatusResponse {
         status: "ok",
         app: "Nook",
-        version: "1.0.0",
+        version: env!("CARGO_PKG_VERSION"),
+        build_id: env!("CARGO_PKG_VERSION"),
         port: state.port,
         desktop_running: true,
     }))
@@ -238,11 +283,18 @@ pub async fn save_note(
         && existing.updated_at > expected_updated_at
         && existing.content != payload.content
     {
+        let lang = crate::commands::settings::get_active_language(&conn);
+        let conflict_label = crate::commands::settings::pick_lang(
+            &lang,
+            "Conflito Sincronizado",
+            "Synced Conflict",
+            "Conflicto Sincronizado",
+        );
         // Automatic safety backup: preserve the conflicting version in version history
         let _ = DbQueries::create_note_version(
             &conn,
             &payload.id,
-            &format!("{} (Conflito Sincronizado)", existing.title),
+            &format!("{} ({})", existing.title, conflict_label),
             &existing.content,
         );
     }
@@ -712,8 +764,16 @@ pub async fn save_setting(
     validate_origin(&headers, state.port)?;
     check_auth(&headers, &state)?;
 
-    let conn = state.db.conn.lock().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    DbQueries::set_setting(&conn, &payload.key, &payload.value).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    {
+        let conn = state.db.conn.lock().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        DbQueries::set_setting(&conn, &payload.key, &payload.value).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    }
+
+    if payload.key == "language"
+        && let Some(ref app) = state.app_handle
+    {
+        crate::apply_tray_language(app, &payload.value);
+    }
 
     broadcast_event(&state, "settings.updated", serde_json::to_value(&payload).unwrap_or_default());
 

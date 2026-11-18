@@ -203,3 +203,13 @@ pub async fn open_nook_web(
 
     Ok(auth_url)
 }
+
+pub const OFFICIAL_SPONSORS_URL: &str = "https://github.com/sponsors/zeitgeist2004";
+
+/// Opens ONLY the hardcoded official GitHub Sponsors page in the user's default browser
+/// while keeping Nook open and without modifying notes or state.
+#[tauri::command]
+pub fn open_sponsors_page() -> Result<String, String> {
+    open_browser_url(OFFICIAL_SPONSORS_URL)?;
+    Ok(OFFICIAL_SPONSORS_URL.to_string())
+}

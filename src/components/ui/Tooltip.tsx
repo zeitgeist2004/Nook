@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 
 export interface TooltipProps {
@@ -11,6 +11,11 @@ export interface TooltipProps {
   className?: string;
 }
 
+const isCoarseTouchOnly = (): boolean => {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+  return window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+};
+
 export const Tooltip: React.FC<TooltipProps> = ({
   content,
   shortcut,
@@ -21,7 +26,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   className = '',
 }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [coords, setCoords] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [coords, setCoords] = useState<{ top: number; left: number }>({ top: -9999, left: -9999 });
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
@@ -30,14 +35,29 @@ export const Tooltip: React.FC<TooltipProps> = ({
     if (!triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
     const gap = 6;
-    let top = 0;
-    let left = 0;
+    const padding = 8;
 
     const tooltipEl = tooltipRef.current;
     const tooltipWidth = tooltipEl ? tooltipEl.offsetWidth : 120;
     const tooltipHeight = tooltipEl ? tooltipEl.offsetHeight : 28;
+    const vw = window.visualViewport?.width ?? window.innerWidth;
+    const vh = window.visualViewport?.height ?? window.innerHeight;
 
-    switch (position) {
+    let effectivePos = position;
+    if (effectivePos === 'top' && rect.top - tooltipHeight - gap < padding) {
+      effectivePos = 'bottom';
+    } else if (effectivePos === 'bottom' && rect.bottom + tooltipHeight + gap > vh - padding) {
+      effectivePos = 'top';
+    } else if (effectivePos === 'left' && rect.left - tooltipWidth - gap < padding) {
+      effectivePos = 'right';
+    } else if (effectivePos === 'right' && rect.right + tooltipWidth + gap > vw - padding) {
+      effectivePos = 'left';
+    }
+
+    let top = 0;
+    let left = 0;
+
+    switch (effectivePos) {
       case 'top':
         top = rect.top - tooltipHeight - gap;
         left = rect.left + rect.width / 2 - tooltipWidth / 2;
@@ -57,18 +77,25 @@ export const Tooltip: React.FC<TooltipProps> = ({
     }
 
     // Viewport edge collision guards
-    const padding = 8;
-    const maxLeft = window.innerWidth - tooltipWidth - padding;
+    const maxLeft = Math.max(padding, vw - tooltipWidth - padding);
     left = Math.max(padding, Math.min(left, maxLeft));
 
-    const maxTop = window.innerHeight - tooltipHeight - padding;
+    const maxTop = Math.max(padding, vh - tooltipHeight - padding);
     top = Math.max(padding, Math.min(top, maxTop));
 
     setCoords({ top, left });
   }, [position]);
 
+  const hideNow = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    setIsVisible(false);
+  }, []);
+
   const handleMouseEnter = () => {
-    if (disabled || !content) return;
+    if (disabled || !content || isCoarseTouchOnly()) return;
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       setIsVisible(true);
@@ -76,33 +103,56 @@ export const Tooltip: React.FC<TooltipProps> = ({
   };
 
   const handleMouseLeave = () => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    setIsVisible(false);
+    hideNow();
   };
 
   const handleMouseDown = () => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    setIsVisible(false);
+    hideNow();
   };
+
+  const handleFocus = (e: React.FocusEvent<HTMLElement>) => {
+    if (disabled || !content || isCoarseTouchOnly()) return;
+    let isKeyboardFocus = true;
+    try {
+      isKeyboardFocus = e.currentTarget.matches(':focus-visible');
+    } catch {
+      isKeyboardFocus = true;
+    }
+    if (!isKeyboardFocus) return;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      setIsVisible(true);
+    }, 120);
+  };
+
+  const handleBlur = () => {
+    hideNow();
+  };
+
+  useLayoutEffect(() => {
+    if (isVisible) {
+      updatePosition();
+    }
+  }, [isVisible, content, shortcut, updatePosition]);
 
   useEffect(() => {
     if (isVisible) {
-      updatePosition();
       const handleScroll = () => setIsVisible(false);
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          hideNow();
+        }
+      };
       window.addEventListener('scroll', handleScroll, true);
       window.addEventListener('resize', updatePosition);
+      window.addEventListener('keydown', handleKeyDown);
       return () => {
         window.removeEventListener('scroll', handleScroll, true);
         window.removeEventListener('resize', updatePosition);
+        window.removeEventListener('keydown', handleKeyDown);
       };
     }
-  }, [isVisible, updatePosition]);
+  }, [isVisible, updatePosition, hideNow]);
 
   useEffect(() => {
     return () => {
@@ -165,6 +215,14 @@ export const Tooltip: React.FC<TooltipProps> = ({
       children.props.onMouseDown?.(e);
       handleMouseDown();
     },
+    onFocus: (e: React.FocusEvent<HTMLElement>) => {
+      children.props.onFocus?.(e);
+      handleFocus(e);
+    },
+    onBlur: (e: React.FocusEvent<HTMLElement>) => {
+      children.props.onBlur?.(e);
+      handleBlur();
+    },
   });
 
   return (
@@ -174,6 +232,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
         createPortal(
           <div
             ref={tooltipRef}
+            role="tooltip"
             className={`nook-tooltip ${className}`}
             style={{
               position: 'fixed',
@@ -181,6 +240,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
               left: `${coords.left}px`,
               zIndex: 99999,
               pointerEvents: 'none',
+              maxWidth: 'calc(100vw - 16px)',
               backgroundColor: 'var(--bg-elevated)',
               border: '1px solid var(--border-color)',
               borderRadius: 'var(--radius-sm)',

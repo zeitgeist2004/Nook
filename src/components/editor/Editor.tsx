@@ -3,9 +3,11 @@ import { EditorHeader, ViewMode } from './EditorHeader';
 import { CodeMirrorEditor } from './CodeMirrorEditor';
 import { MarkdownViewer } from './MarkdownViewer';
 import { NookIdleMascot } from '../mascot/NookMascot';
-import { SaveStatus, AppSettings } from '../../types';
-import { Plus, Command, HelpCircle, BookOpen, Menu, Trash2 } from 'lucide-react';
+import { SaveStatus, AppSettings, NoteWorkflowRole } from '../../types';
+import { Plus, Command, HelpCircle, BookOpen, Menu } from 'lucide-react';
 import { Tooltip } from '../ui/Tooltip';
+import { ErrorBoundary } from '../ui/ErrorBoundary';
+import { useTranslation } from '../../i18n';
 
 interface EditorProps {
   noteId: string | null;
@@ -29,6 +31,9 @@ interface EditorProps {
   onNavigateWikilink?: (targetName: string) => void;
   onOpenVersionHistory?: () => void;
   onOpenOnboarding?: () => void;
+  noteWorkflowRole?: NoteWorkflowRole | null;
+  onUsePromptTemplate?: () => void;
+  onCopyHandoffContinue?: () => void;
   isMobile?: boolean;
   onToggleDrawer?: () => void;
 }
@@ -55,10 +60,15 @@ export const Editor: React.FC<EditorProps> = ({
   onNavigateWikilink,
   onOpenVersionHistory,
   onOpenOnboarding,
+  noteWorkflowRole,
+  onUsePromptTemplate,
+  onCopyHandoffContinue,
   isMobile = false,
   onToggleDrawer,
 }) => {
+  const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<ViewMode>('edit');
+  const effectiveViewMode: ViewMode = isMobile && viewMode === 'split' ? 'edit' : viewMode;
 
   // Toggle Edit/Preview with Ctrl+E or Cmd+E
   useEffect(() => {
@@ -103,7 +113,7 @@ export const Editor: React.FC<EditorProps> = ({
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: 'var(--bg-main)',
+            backgroundColor: 'transparent',
             gap: '16px',
             color: 'var(--text-muted)',
             padding: '24px 20px',
@@ -125,10 +135,10 @@ export const Editor: React.FC<EditorProps> = ({
                 letterSpacing: '-0.01em',
               }}
             >
-              Nenhuma nota selecionada
+              {t.editor.noNoteSelected}
             </h2>
             <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.45', color: 'var(--text-secondary)' }}>
-              Toque em Nova Nota para escrever ou abra o menu lateral para escolher uma anotação existente.
+              {t.editor.noNoteSelectedDesc}
             </p>
           </div>
 
@@ -153,7 +163,7 @@ export const Editor: React.FC<EditorProps> = ({
               }}
             >
               <Plus size={18} />
-              <span>Nova Anotação</span>
+              <span>{t.editor.newNoteMobile}</span>
             </button>
 
             {onToggleDrawer && (
@@ -176,7 +186,7 @@ export const Editor: React.FC<EditorProps> = ({
                 }}
               >
                 <BookOpen size={16} />
-                <span>Ver Minhas Notas</span>
+                <span>{t.editor.viewMyNotes}</span>
               </button>
             )}
           </div>
@@ -193,7 +203,7 @@ export const Editor: React.FC<EditorProps> = ({
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: 'var(--bg-main)',
+          backgroundColor: 'transparent',
           gap: '20px',
           color: 'var(--text-muted)',
           padding: '40px',
@@ -219,15 +229,15 @@ export const Editor: React.FC<EditorProps> = ({
               marginBottom: '6px',
             }}
           >
-            Nenhuma nota aberta
+            {t.editor.noNoteOpen}
           </h2>
           <p style={{ fontSize: '13px', lineHeight: '1.5' }}>
-            Selecione uma nota na barra lateral ou crie uma nova nota rápida para começar a escrever imediatamente.
+            {t.editor.noNoteOpenDesc}
           </p>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <Tooltip content="Criar nova anotação" shortcut="Ctrl+N" position="top" disabled={isMobile}>
+          <Tooltip content={t.editor.newQuickNoteTooltip} shortcut="Ctrl+N" position="top" disabled={isMobile}>
             <button
               onClick={onCreateQuickNote}
               className="btn-primary"
@@ -243,7 +253,7 @@ export const Editor: React.FC<EditorProps> = ({
               }}
             >
               <Plus size={16} />
-              Nova Nota Rápida
+              {t.editor.newQuickNoteBtn}
               {!isMobile && (
                 <kbd
                   style={{
@@ -279,11 +289,11 @@ export const Editor: React.FC<EditorProps> = ({
                 }}
               >
                 <Menu size={14} />
-                Abrir Menu de Notas
+                {t.editor.openNotesMenu}
               </button>
             )
           ) : (
-            <Tooltip content="Pesquisar e executar ações" shortcut="Ctrl+K" position="top">
+            <Tooltip content={t.editor.commandsTooltip} shortcut="Ctrl+K" position="top">
               <button
                 onClick={onOpenCommandPalette}
                 className="btn-secondary"
@@ -298,7 +308,7 @@ export const Editor: React.FC<EditorProps> = ({
                 }}
               >
                 <Command size={14} />
-                Comandos
+                {t.editor.commands}
                 <kbd
                   style={{
                     fontSize: '10px',
@@ -314,7 +324,7 @@ export const Editor: React.FC<EditorProps> = ({
           )}
 
           {!isMobile && onOpenOnboarding && (
-            <Tooltip content="Guia de atalhos e introdução" shortcut="Ctrl+/" position="top">
+            <Tooltip content={t.editor.quickGuideTooltip} shortcut="Ctrl+/" position="top">
               <button
                 onClick={onOpenOnboarding}
                 className="btn-secondary"
@@ -329,7 +339,7 @@ export const Editor: React.FC<EditorProps> = ({
                 }}
               >
                 <HelpCircle size={14} />
-                Guia Rápido
+                {t.editor.quickGuide}
                 <kbd
                   style={{
                     fontSize: '10px',
@@ -352,10 +362,11 @@ export const Editor: React.FC<EditorProps> = ({
     <div
       style={{
         flex: 1,
+        minWidth: 0,
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'var(--bg-main)',
+        backgroundColor: 'transparent',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -374,17 +385,22 @@ export const Editor: React.FC<EditorProps> = ({
         onCopyContent={onCopyContent}
         isExternal={isExternal}
         externalPath={externalPath}
-        viewMode={viewMode}
+        viewMode={effectiveViewMode}
         onViewModeChange={setViewMode}
         onOpenVersionHistory={onOpenVersionHistory}
+        noteWorkflowRole={noteWorkflowRole}
+        onUsePromptTemplate={onUsePromptTemplate}
+        onCopyHandoffContinue={onCopyHandoffContinue}
+        readingWidth={settings.readingWidth || 'comfortable'}
         isMobile={isMobile}
       />
 
       {/* Editor / Reading Content Area */}
-      {viewMode === 'edit' && (
+      {effectiveViewMode === 'edit' && (
         <div
           style={{
             flex: 1,
+            minWidth: 0,
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column',
@@ -398,76 +414,100 @@ export const Editor: React.FC<EditorProps> = ({
           }}
         >
           <div
+            className={isMobile ? undefined : `nook-measure-${settings.readingWidth || 'comfortable'}`}
             style={{
               width: '100%',
               maxWidth: '940px',
+              minWidth: 0,
               height: '100%',
               display: 'flex',
               flexDirection: 'column',
             }}
           >
-            <CodeMirrorEditor
-              key={`edit-${noteId || externalPath || 'none'}`}
-              content={content}
-              onChange={onContentChange}
-              showLineNumbers={settings.showLineNumbers}
-              lineWrapping={settings.lineWrapping}
-              fontSize={settings.editorFontSize}
-              fontFamily={settings.editorFont}
-            />
+            <ErrorBoundary scope="editor">
+              <CodeMirrorEditor
+                key={`edit-${noteId || externalPath || 'none'}`}
+                content={content}
+                onChange={onContentChange}
+                showLineNumbers={settings.showLineNumbers}
+                lineWrapping={settings.lineWrapping}
+                fontSize={settings.editorFontSize}
+                fontFamily={settings.editorFont}
+                lineHeight={settings.lineHeight}
+                readingWidth={isMobile ? 'full' : (settings.readingWidth || 'comfortable')}
+              />
+            </ErrorBoundary>
           </div>
         </div>
       )}
 
-      {viewMode === 'preview' && (
-        <div style={{ flex: 1, overflow: 'hidden' }}>
-          <MarkdownViewer
-            content={content}
-            onContentChange={onContentChange}
-            onNavigateWikilink={onNavigateWikilink}
-            fontSize={settings.editorFontSize}
-            fontFamily={settings.editorFont}
-          />
-        </div>
-      )}
-
-      {viewMode === 'split' && (
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-          <div
-            style={{
-              flex: 1,
-              height: '100%',
-              overflow: 'hidden',
-              borderRight: '1px solid var(--border-subtle)',
-            }}
-          >
-            <CodeMirrorEditor
-              key={`edit-${noteId || externalPath || 'none'}`}
-              content={content}
-              onChange={onContentChange}
-              showLineNumbers={settings.showLineNumbers}
-              lineWrapping={settings.lineWrapping}
-              fontSize={settings.editorFontSize}
-              fontFamily={settings.editorFont}
-            />
-          </div>
-          <div style={{ flex: 1, height: '100%', overflow: 'hidden' }}>
+      {effectiveViewMode === 'preview' && (
+        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+          <ErrorBoundary scope="editor">
             <MarkdownViewer
               content={content}
               onContentChange={onContentChange}
               onNavigateWikilink={onNavigateWikilink}
               fontSize={settings.editorFontSize}
               fontFamily={settings.editorFont}
+              lineHeight={settings.lineHeight}
+              readingWidth={isMobile ? 'full' : (settings.readingWidth || 'comfortable')}
+              paragraphSpacing={settings.paragraphSpacing || 'comfortable'}
             />
+          </ErrorBoundary>
+        </div>
+      )}
+
+      {effectiveViewMode === 'split' && (
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', overflow: 'hidden' }}>
+          <div
+            style={{
+              flex: 1,
+              minWidth: 0,
+              height: '100%',
+              overflow: 'hidden',
+              borderRight: '1px solid var(--border-subtle)',
+            }}
+          >
+            <ErrorBoundary scope="editor">
+              <CodeMirrorEditor
+                key={`edit-${noteId || externalPath || 'none'}`}
+                content={content}
+                onChange={onContentChange}
+                showLineNumbers={settings.showLineNumbers}
+                lineWrapping={settings.lineWrapping}
+                fontSize={settings.editorFontSize}
+                fontFamily={settings.editorFont}
+                lineHeight={settings.lineHeight}
+                readingWidth="full"
+              />
+            </ErrorBoundary>
+          </div>
+          <div style={{ flex: 1, minWidth: 0, height: '100%', overflow: 'hidden' }}>
+            <ErrorBoundary scope="editor">
+              <MarkdownViewer
+                content={content}
+                onContentChange={onContentChange}
+                onNavigateWikilink={onNavigateWikilink}
+                fontSize={settings.editorFontSize}
+                fontFamily={settings.editorFont}
+                lineHeight={settings.lineHeight}
+                readingWidth="full"
+                paragraphSpacing={settings.paragraphSpacing || 'comfortable'}
+              />
+            </ErrorBoundary>
           </div>
         </div>
       )}
 
       {/* Discreet Bottom status bar */}
       <div
+        className="nook-editor-statusbar"
         style={{
-          height: isMobile ? '32px' : '24px',
-          padding: isMobile ? '0 14px' : '0 24px',
+          minHeight: isMobile ? '28px' : '24px',
+          padding: isMobile
+            ? '3px max(14px, env(safe-area-inset-right, 14px)) max(4px, env(safe-area-inset-bottom, 4px)) max(14px, env(safe-area-inset-left, 14px))'
+            : '0 24px',
           borderTop: '1px solid var(--border-subtle)',
           display: 'flex',
           alignItems: 'center',
@@ -479,45 +519,43 @@ export const Editor: React.FC<EditorProps> = ({
         }}
       >
         {isMobile ? (
-          <button
-            onClick={() => {
-              if (window.confirm('Deseja mover esta nota para a lixeira?')) {
-                onDelete();
-              }
-            }}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              color: '#EF4444',
-              backgroundColor: 'rgba(239, 68, 68, 0.08)',
-              border: '1px solid rgba(239, 68, 68, 0.2)',
-              fontSize: '11px',
-              fontWeight: 500,
-              padding: '3px 8px',
-              borderRadius: 'var(--radius-sm)',
-              cursor: 'pointer',
-              touchAction: 'manipulation',
-            }}
-            aria-label="Excluir nota aberta"
-          >
-            <Trash2 size={12} />
-            <span>Excluir Nota</span>
-          </button>
+          onOpenOnboarding ? (
+            <button
+              type="button"
+              onClick={onOpenOnboarding}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                color: 'var(--text-muted)',
+                fontSize: '11px',
+                padding: '2px 4px',
+                minHeight: '24px',
+                borderRadius: 'var(--radius-sm)',
+              }}
+            >
+              <HelpCircle size={12} />
+              <span>{t.ux.helpAndShortcutsBtn}</span>
+            </button>
+          ) : (
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              {effectiveViewMode === 'preview' ? t.editor.readBadge : t.editor.editBadge}
+            </span>
+          )
         ) : (
           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-            {viewMode === 'preview'
-              ? 'Leitura'
-              : viewMode === 'split'
-              ? 'Dividido'
-              : 'Edição'}{' '}
-            • Ctrl+E para alternar
+            {effectiveViewMode === 'preview'
+              ? t.editor.readBadge
+              : effectiveViewMode === 'split'
+              ? t.editor.splitBadge
+              : t.editor.editBadge}{' '}
+            {t.editor.ctrlEToToggle}
           </span>
         )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: 'var(--text-secondary)' }}>
           <span>
-            {stats.words} {stats.words === 1 ? 'palavra' : 'palavras'} · {stats.chars} {stats.chars === 1 ? 'caractere' : 'caracteres'}
+            {stats.words} {stats.words === 1 ? t.editor.wordSingular : t.editor.wordPlural} · {stats.chars} {stats.chars === 1 ? t.editor.charSingular : t.editor.charPlural}
           </span>
         </div>
       </div>

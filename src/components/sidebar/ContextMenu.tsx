@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   FilePlus,
   FolderPlus,
@@ -8,8 +8,10 @@ import {
   Pin,
   Download,
   FolderInput,
+  Layers,
 } from 'lucide-react';
 import { ContextMenuState, NoteSummary, Collection } from '../../types';
+import { useTranslation } from '../../i18n';
 
 interface ContextMenuProps {
   menu: ContextMenuState;
@@ -23,6 +25,7 @@ interface ContextMenuProps {
   onCreateNoteInCollection: (collectionId: string) => void;
   onCreateFolderInCollection: (collectionId: string) => void;
   onMoveNotePrompt: (noteId: string) => void;
+  onOpenProjectTools?: (collectionId: string) => void;
 }
 
 const ContextMenuComponent: React.FC<ContextMenuProps> = ({
@@ -37,10 +40,32 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
   onCreateNoteInCollection,
   onCreateFolderInCollection,
   onMoveNotePrompt,
+  onOpenProjectTools,
 }) => {
+  const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState<{ left: number; top: number }>({
+    left: menu.x,
+    top: menu.y,
+  });
+
+  useLayoutEffect(() => {
+    if (!menu.isOpen) return;
+    const padding = 8;
+    const vw = window.visualViewport?.width ?? window.innerWidth;
+    const vh = window.visualViewport?.height ?? window.innerHeight;
+    const el = menuRef.current;
+    const width = el ? el.offsetWidth : 196;
+    const height = el ? el.offsetHeight : 220;
+
+    const clampedLeft = Math.max(padding, Math.min(menu.x, vw - width - padding));
+    const clampedTop = Math.max(padding, Math.min(menu.y, vh - height - padding));
+    setCoords({ left: clampedLeft, top: clampedTop });
+  }, [menu.isOpen, menu.x, menu.y, menu.type]);
 
   useEffect(() => {
+    if (!menu.isOpen) return;
+
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         onClose();
@@ -48,7 +73,24 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+        return;
+      }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        const buttons = Array.from(
+          menuRef.current?.querySelectorAll<HTMLButtonElement>('button.menu-item') ?? []
+        );
+        if (buttons.length === 0) return;
+        e.preventDefault();
+        const curIdx = buttons.findIndex((b) => b === document.activeElement);
+        const nextIdx =
+          e.key === 'ArrowDown'
+            ? (curIdx + 1) % buttons.length
+            : (curIdx - 1 + buttons.length) % buttons.length;
+        buttons[nextIdx]?.focus();
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -57,7 +99,7 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [onClose]);
+  }, [menu.isOpen, onClose]);
 
   if (!menu.isOpen) return null;
 
@@ -67,12 +109,16 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
   return (
     <div
       ref={menuRef}
+      role="menu"
       style={{
         position: 'fixed',
-        left: `${menu.x}px`,
-        top: `${menu.y}px`,
+        left: `${coords.left}px`,
+        top: `${coords.top}px`,
         zIndex: 9999,
-        minWidth: '180px',
+        minWidth: '188px',
+        maxWidth: 'calc(100vw - 16px)',
+        maxHeight: 'calc(100dvh - 16px)',
+        overflowY: 'auto',
         backgroundColor: 'var(--bg-elevated)',
         border: '1px solid var(--border-color)',
         borderRadius: 'var(--radius-md)',
@@ -94,7 +140,7 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
             className="menu-item"
           >
             <Edit2 size={14} />
-            <span>Renomear</span>
+            <span>{t.contextMenu.rename}</span>
           </button>
 
           <button
@@ -105,7 +151,7 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
             className="menu-item"
           >
             <Pin size={14} />
-            <span>{note.is_pinned ? 'Desafixar nota' : 'Fixar no topo'}</span>
+            <span>{note.is_pinned ? t.contextMenu.unpin : t.contextMenu.pinTop}</span>
           </button>
 
           <button
@@ -116,7 +162,7 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
             className="menu-item"
           >
             <CopyPlus size={14} />
-            <span>Duplicar</span>
+            <span>{t.contextMenu.duplicate}</span>
           </button>
 
           <button
@@ -127,7 +173,7 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
             className="menu-item"
           >
             <FolderInput size={14} />
-            <span>Mover para...</span>
+            <span>{t.contextMenu.moveTo}</span>
           </button>
 
           <button
@@ -138,7 +184,7 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
             className="menu-item"
           >
             <Download size={14} />
-            <span>Exportar (.md)</span>
+            <span>{t.contextMenu.exportMd}</span>
           </button>
 
           <div style={{ height: '1px', backgroundColor: 'var(--border-color)', margin: '4px 0' }} />
@@ -151,7 +197,7 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
             className="menu-item text-danger"
           >
             <Trash2 size={14} />
-            <span>Mover para lixeira</span>
+            <span>{t.contextMenu.moveToTrash}</span>
           </button>
         </>
       )}
@@ -166,7 +212,7 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
             className="menu-item"
           >
             <FilePlus size={14} />
-            <span>Nova nota aqui</span>
+            <span>{t.contextMenu.newNoteHere}</span>
           </button>
 
           <button
@@ -177,7 +223,7 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
             className="menu-item"
           >
             <FolderPlus size={14} />
-            <span>Nova subpasta</span>
+            <span>{t.contextMenu.newSubfolder}</span>
           </button>
 
           <button
@@ -188,8 +234,21 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
             className="menu-item"
           >
             <Edit2 size={14} />
-            <span>Renomear {collection.collection_type === 'project' ? 'projeto' : 'pasta'}</span>
+            <span>{collection.collection_type === 'project' ? t.contextMenu.renameProject : t.contextMenu.renameFolder}</span>
           </button>
+
+          {onOpenProjectTools && (
+            <button
+              onClick={() => {
+                onClose();
+                onOpenProjectTools(collection.id);
+              }}
+              className="menu-item"
+            >
+              <Layers size={14} />
+              <span>{t.contextMenu.projectTools}</span>
+            </button>
+          )}
 
           <div style={{ height: '1px', backgroundColor: 'var(--border-color)', margin: '4px 0' }} />
 
@@ -201,7 +260,7 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
             className="menu-item text-danger"
           >
             <Trash2 size={14} />
-            <span>Excluir {collection.collection_type === 'project' ? 'projeto' : 'pasta'}</span>
+            <span>{collection.collection_type === 'project' ? t.contextMenu.deleteProject : t.contextMenu.deleteFolder}</span>
           </button>
         </>
       )}

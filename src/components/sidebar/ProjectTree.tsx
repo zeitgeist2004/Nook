@@ -10,9 +10,12 @@ import {
   FolderPlus,
   Briefcase,
   Pin,
+  Layers,
+  MoreHorizontal,
 } from 'lucide-react';
-import { Collection, NoteSummary } from '../../types';
+import { Collection, DevProjectsConfigMap, NoteSummary } from '../../types';
 import { Tooltip } from '../ui/Tooltip';
+import { useTranslation } from '../../i18n';
 
 interface ProjectTreeProps {
   collections: Collection[];
@@ -25,6 +28,10 @@ interface ProjectTreeProps {
   onMoveNote: (noteId: string, targetCollectionId: string | null) => void;
   onImportFile?: (file: File, collectionId?: string | null) => void;
   onReorderCollections?: (orderedIds: string[]) => void;
+  devWorkflowEnabled?: boolean;
+  devProjectsConfig?: DevProjectsConfigMap;
+  onOpenProjectTools?: (collectionId: string) => void;
+  isMobile?: boolean;
 }
 
 interface DropIndicator {
@@ -44,7 +51,12 @@ export const ProjectTree: React.FC<ProjectTreeProps> = ({
   onMoveNote,
   onImportFile,
   onReorderCollections,
+  devWorkflowEnabled = false,
+  devProjectsConfig,
+  onOpenProjectTools,
+  isMobile = false,
 }) => {
+  const { t } = useTranslation();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
     return new Set(collections.filter((c) => !c.parent_id).map((c) => c.id));
   });
@@ -370,6 +382,20 @@ export const ProjectTree: React.FC<ProjectTreeProps> = ({
         <div
           data-collection-id={collection.id}
           data-collection-row-id={collection.id}
+          role="button"
+          tabIndex={0}
+          aria-expanded={isExpanded}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setExpandedIds((prev) => {
+                const next = new Set(prev);
+                if (next.has(collection.id)) next.delete(collection.id);
+                else next.add(collection.id);
+                return next;
+              });
+            }
+          }}
           onPointerDown={(e) => handleCollectionPointerDown(e, collection)}
           onContextMenu={(e) => onOpenContextMenu(e, 'collection', collection)}
           onDragOver={(e) => handleRowDragOver(e, collection)}
@@ -445,33 +471,89 @@ export const ProjectTree: React.FC<ProjectTreeProps> = ({
                 gap: '2px',
               }}
             >
-              + Soltar aqui
+              {t.sidebar.dropHere}
             </span>
           ) : (
             /* Quick Hover Add actions */
-            <div className="hover-actions" style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-              <Tooltip content="Nova Nota no Projeto" position="top">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+              {isProject &&
+                onOpenProjectTools &&
+                (devWorkflowEnabled ||
+                  devProjectsConfig?.[collection.id]?.enabled ||
+                  devProjectsConfig?.[collection.id]?.linkedFolderPath) && (
+                  <Tooltip content={t.contextMenu.projectTools} position="top" disabled={isMobile}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenProjectTools(collection.id);
+                      }}
+                      className={isMobile ? undefined : 'hover-actions'}
+                      aria-label={t.contextMenu.projectTools}
+                      style={{
+                        padding: isMobile ? '6px' : '2px',
+                        color: 'var(--text-muted)',
+                        borderRadius: '3px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Layers size={13} />
+                    </button>
+                  </Tooltip>
+                )}
+              <div className="hover-actions" style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                <Tooltip content={t.sidebar.newNoteInProject} position="top" disabled={isMobile}>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onCreateNoteInCollection(collection.id);
+                    }}
+                    aria-label={t.sidebar.newNoteInProject}
+                    style={{
+                      padding: isMobile ? '6px' : '2px',
+                      color: 'var(--text-muted)',
+                      borderRadius: '3px',
+                    }}
+                  >
+                    <Plus size={13} />
+                  </button>
+                </Tooltip>
+                {!isMobile && (
+                  <Tooltip content={t.sidebar.newSubfolder} position="top">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onCreateFolderInCollection(collection.id);
+                      }}
+                      aria-label={t.sidebar.newSubfolder}
+                      style={{ padding: '2px', color: 'var(--text-muted)', borderRadius: '3px' }}
+                    >
+                      <FolderPlus size={13} />
+                    </button>
+                  </Tooltip>
+                )}
+              </div>
+              {isMobile && (
                 <button
+                  type="button"
+                  aria-label={t.ux.itemMenuAria}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onCreateNoteInCollection(collection.id);
+                    onOpenContextMenu(e, 'collection', collection);
                   }}
-                  style={{ padding: '2px', color: 'var(--text-muted)', borderRadius: '3px' }}
-                >
-                  <Plus size={13} />
-                </button>
-              </Tooltip>
-              <Tooltip content="Nova Subpasta" position="top">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onCreateFolderInCollection(collection.id);
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    color: 'var(--text-muted)',
+                    borderRadius: 'var(--radius-sm)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
-                  style={{ padding: '2px', color: 'var(--text-muted)', borderRadius: '3px' }}
                 >
-                  <FolderPlus size={13} />
+                  <MoreHorizontal size={14} />
                 </button>
-              </Tooltip>
+              )}
             </div>
           )}
         </div>
@@ -551,10 +633,32 @@ export const ProjectTree: React.FC<ProjectTreeProps> = ({
                       pointerEvents: 'none',
                     }}
                   >
-                    {note.title || 'Sem título'}
+                    {note.title || t.common.untitled}
                   </span>
                   {note.is_pinned && (
                     <Pin size={11} style={{ color: 'var(--accent)', flexShrink: 0, pointerEvents: 'none' }} />
+                  )}
+                  {isMobile && (
+                    <button
+                      type="button"
+                      aria-label={t.ux.itemMenuAria}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenContextMenu(e, 'note', note);
+                      }}
+                      style={{
+                        width: '30px',
+                        height: '30px',
+                        color: 'var(--text-muted)',
+                        borderRadius: 'var(--radius-sm)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <MoreHorizontal size={14} />
+                    </button>
                   )}
                 </div>
               );
@@ -616,7 +720,7 @@ export const ProjectTree: React.FC<ProjectTreeProps> = ({
           textAlign: 'center',
         }}
       >
-        Nenhum projeto criado.
+        {t.sidebar.noProjects}
       </div>
     );
   }
@@ -673,7 +777,8 @@ export const ProjectTree: React.FC<ProjectTreeProps> = ({
           opacity: 0;
           transition: opacity var(--transition-fast);
         }
-        .tree-item:hover .hover-actions {
+        .tree-item:hover .hover-actions,
+        .tree-item:focus-within .hover-actions {
           opacity: 1;
         }
         .tree-note-item:hover {

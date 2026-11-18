@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '../../i18n';
 
 /**
  * 1. NookIdleMascot:
@@ -9,6 +10,7 @@ export const NookIdleMascot: React.FC<{ size?: number; className?: string }> = (
   size = 120,
   className = '',
 }) => {
+  const { t } = useTranslation();
   const [isBlinking, setIsBlinking] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
 
@@ -79,7 +81,7 @@ export const NookIdleMascot: React.FC<{ size?: number; className?: string }> = (
       {/* Idle Blinking Eyes */}
       <img
         src="/brand/mascot/nook-idle-blink.png"
-        alt="Nook Piscando"
+        alt={t.splash.winkAlt}
         style={{
           width: '100%',
           height: '100%',
@@ -105,6 +107,7 @@ export const NookIdleMascot: React.FC<{ size?: number; className?: string }> = (
 export const NookSaveMicroMark: React.FC<{
   saveStatus: 'saved' | 'saving' | 'unsaved' | 'error';
 }> = ({ saveStatus }) => {
+  const { t } = useTranslation();
   const [showWink, setShowWink] = useState(false);
 
   useEffect(() => {
@@ -130,10 +133,10 @@ export const NookSaveMicroMark: React.FC<{
       }}
       title={
         saveStatus === 'saved'
-          ? 'Salvo com sucesso'
+          ? t.common.saved
           : saveStatus === 'saving'
-          ? 'Salvando alterações...'
-          : 'Alterações pendentes'
+          ? t.common.savingChanges
+          : t.common.changesPending
       }
     >
       <img
@@ -157,6 +160,7 @@ export const NookSaveMicroMark: React.FC<{
  * Welcoming Nook with friendly arm wave and pop-in entrance.
  */
 export const NookWelcomeMascot: React.FC<{ size?: number }> = ({ size = 72 }) => {
+  const { t } = useTranslation();
   return (
     <div
       className="animate-nook-pop"
@@ -170,7 +174,7 @@ export const NookWelcomeMascot: React.FC<{ size?: number }> = ({ size = 72 }) =>
     >
       <img
         src="/brand/mascot/nook-welcome-wave.png"
-        alt="Bem-vindo ao Nook"
+        alt={t.mascot.welcomeAlt}
         className="animate-nook-wave"
         style={{
           width: '100%',
@@ -188,6 +192,7 @@ export const NookWelcomeMascot: React.FC<{ size?: number }> = ({ size = 72 }) =>
  * Zen peaceful Nook sitting beside clean sparkling wastebasket.
  */
 export const NookCleanTrashMascot: React.FC<{ size?: number }> = ({ size = 96 }) => {
+  const { t } = useTranslation();
   return (
     <div
       className="animate-nook-pop"
@@ -200,7 +205,7 @@ export const NookCleanTrashMascot: React.FC<{ size?: number }> = ({ size = 96 })
     >
       <img
         src="/brand/mascot/nook-trash-clean.png"
-        alt="Lixeira Limpa"
+        alt={t.mascot.cleanTrashAlt}
         className="animate-nook-zen"
         style={{
           width: `${size}px`,
@@ -218,6 +223,7 @@ export const NookCleanTrashMascot: React.FC<{ size?: number }> = ({ size = 96 })
  * Drop target cue with dashed border and attentive Nook looking up.
  */
 export const NookDropZoneVisual: React.FC = () => {
+  const { t } = useTranslation();
   return (
     <div
       className="animate-nook-drop-pulse"
@@ -240,7 +246,7 @@ export const NookDropZoneVisual: React.FC = () => {
     >
       <img
         src="/brand/mascot/nook-drag-alert.png"
-        alt="Solte aqui"
+        alt={t.mascot.dropHereAlt}
         style={{
           width: '110px',
           height: '110px',
@@ -257,10 +263,10 @@ export const NookDropZoneVisual: React.FC = () => {
             marginBottom: '4px',
           }}
         >
-          Solte para abrir no Editor
+          {t.mascot.dropTitle}
         </h3>
         <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-          Solte aqui para abrir em uma nova aba, ou arraste sobre uma pasta na barra lateral para salvar no projeto.
+          {t.mascot.dropDesc}
         </p>
       </div>
     </div>
@@ -275,6 +281,7 @@ export const NookImportSuccessToast: React.FC<{
   filename: string;
   onClose: () => void;
 }> = ({ filename, onClose }) => {
+  const { t } = useTranslation();
   useEffect(() => {
     const timer = setTimeout(onClose, 2600);
     return () => clearTimeout(timer);
@@ -300,7 +307,7 @@ export const NookImportSuccessToast: React.FC<{
     >
       <img
         src="/brand/mascot/nook-drag-success.png"
-        alt="Sucesso"
+        alt={t.mascot.successAlt}
         style={{
           width: '36px',
           height: '36px',
@@ -310,7 +317,7 @@ export const NookImportSuccessToast: React.FC<{
       />
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
-          Markdown importado
+          {t.mascot.importTitle}
         </span>
         <span
           style={{

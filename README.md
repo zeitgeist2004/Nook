@@ -8,184 +8,191 @@
 
 # Nook
 
-### Seu refúgio minimalista, rápido e 100% local-first para notas, projetos e conhecimento.
+### Minimalist, fast, 100% local-first notes and project workspace for Windows, Web, and Mobile.
+
+<p>
+  <strong>🌐 Language:</strong>
+  &nbsp;<b>English</b>
+  &nbsp;•&nbsp;
+  <a href="./README.pt-BR.md">Português (BR)</a>
+  &nbsp;•&nbsp;
+  <a href="./README.es.md">Español</a>
+</p>
 
 <p>
   <a href="https://github.com/zeitgeist2004/Nook/releases/latest">
-    <img src="https://img.shields.io/badge/Versão-v1.0.0-111111?style=for-the-badge&logo=github&logoColor=white" alt="Versão v1.0.0" />
+    <img src="https://img.shields.io/badge/Version-v1.0.0-111111?style=for-the-badge&logo=github&logoColor=white" alt="Version v1.0.0" />
   </a>
   <img src="https://img.shields.io/badge/Windows-10%20%2F%2011%20(x64)-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows 10/11" />
   <img src="https://img.shields.io/badge/Tauri%202%20%2B%20Rust-Native-FFC131?style=for-the-badge&logo=tauri&logoColor=black" alt="Tauri 2 + Rust" />
   <img src="https://img.shields.io/badge/SQLite-WAL%20Offline-0F80CC?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite WAL" />
   <a href="./LICENSE">
-    <img src="https://img.shields.io/badge/Licença-MIT-10B981?style=for-the-badge" alt="Licença MIT" />
+    <img src="https://img.shields.io/badge/License-MIT-10B981?style=for-the-badge" alt="MIT License" />
   </a>
 </p>
 
 <p>
-  <a href="#-download-e-instalação-windows">⬇️ Baixar EXE / Instalador</a> •
-  <a href="#-recursos-principais">✨ Recursos</a> •
-  <a href="#-nook-web-mobile-e-voice">📱 Web & Mobile</a> •
-  <a href="#-atalhos-de-teclado">⌨️ Atalhos</a> •
-  <a href="#-compilar-do-código-fonte">🛠️ Desenvolvimento</a>
+  <a href="#-download--install-windows">⬇️ Download EXE / Installer</a> •
+  <a href="#-key-features">✨ Features</a> •
+  <a href="#-interactive-feature-tour">🎨 Deep Dive</a> •
+  <a href="#-privacy--architecture">🔒 Architecture</a> •
+  <a href="#-build-from-source">🛠️ Build</a>
 </p>
 
 </div>
 
 ---
 
-## ⬇️ Download e Instalação (Windows)
+## ⬇️ Download & Install (Windows)
 
-Escolha o formato que preferir diretamente nos lançamentos oficiais (**[GitHub Releases](https://github.com/zeitgeist2004/Nook/releases/latest)**):
+Pick your preferred format from **[GitHub Releases](https://github.com/zeitgeist2004/Nook/releases/latest)**:
 
-| Formato | Indicado para | Download Direto |
+| Format | Best For | Direct Download |
 | :--- | :--- | :--- |
-| **Instalador `.exe` (NSIS)** | Instalação tradicional no Windows com atalhos e associação de arquivos `.md` / `.txt` *(Recomendado)* | [![Baixar Setup EXE](https://img.shields.io/badge/Baixar-Nook--1.0.0--Setup.exe-00C875?style=flat-square&logo=windows&logoColor=white)](https://github.com/zeitgeist2004/Nook/releases/download/v1.0.0/Nook-1.0.0-Setup.exe) |
-| **Instalador `.msi` (Windows Installer)** | Instalação corporativa / pacote MSI padrão Windows x64 | [![Baixar MSI](https://img.shields.io/badge/Baixar-Nook--1.0.0--x64.msi-0078D6?style=flat-square&logo=windows&logoColor=white)](https://github.com/zeitgeist2004/Nook/releases/download/v1.0.0/Nook-1.0.0-x64.msi) |
-| **Versão Portátil (`.zip`)** | Extrair e usar sem instalar (já inclui `Nook.exe`, `WebView2Loader.dll` e `cloudflared.exe` para Nook Mobile) | [![Baixar ZIP](https://img.shields.io/badge/Baixar-Nook--Portatil--Completo.zip-6B7280?style=flat-square&logo=files&logoColor=white)](https://github.com/zeitgeist2004/Nook/releases/download/v1.0.0/Nook-Portatil-Completo.zip) |
-| **Executável Avulso (`.exe`)** | Execução direta do binário compilado `Nook.exe` | [![Baixar EXE](https://img.shields.io/badge/Baixar-Nook.exe-18181B?style=flat-square&logo=windows&logoColor=white)](https://github.com/zeitgeist2004/Nook/releases/download/v1.0.0/Nook.exe) |
+| **`.exe` Installer (NSIS)** | Standard Windows installation with shortcuts, `.md` / `.txt` file associations, and built-in auto-updates *(Recommended)* | [![Download Setup EXE](https://img.shields.io/badge/Download-Nook--1.0.0--Setup.exe-00C875?style=flat-square&logo=windows&logoColor=white)](https://github.com/zeitgeist2004/Nook/releases/latest) |
+| **`.msi` Installer (Windows Installer)** | Enterprise / standard x64 Windows Installer package | [![Download MSI](https://img.shields.io/badge/Download-Nook--1.0.0--x64.msi-0078D6?style=flat-square&logo=windows&logoColor=white)](https://github.com/zeitgeist2004/Nook/releases/latest) |
+| **Portable `.zip`** | Extract and run anywhere without installing (includes `Nook.exe`, `WebView2Loader.dll`, and `cloudflared.exe` for Nook Mobile) | [![Download ZIP](https://img.shields.io/badge/Download-Nook--Portatil--Completo.zip-6B7280?style=flat-square&logo=files&logoColor=white)](https://github.com/zeitgeist2004/Nook/releases/latest) |
+| **Standalone `.exe`** | Direct launch of the compiled `Nook.exe` binary | [![Download EXE](https://img.shields.io/badge/Download-Nook.exe-18181B?style=flat-square&logo=windows&logoColor=white)](https://github.com/zeitgeist2004/Nook/releases/latest) |
 
 > [!TIP]
-> Quer abrir qualquer `.md` ou `.txt` do Windows diretamente com o Nook? Após instalar via `Nook-1.0.0-Setup.exe`, clique com o botão direito em um arquivo `.md` → **Abrir com** → **Nook** e marque **Sempre**. Suas edições serão salvas no arquivo original com proteção contra gravações acidentais e suporte a UTF-8, UTF-16 e Windows-1252.
+> Want to open any `.md` or `.txt` file on Windows directly with Nook? Right-click any Markdown or text file → **Open with** → **Nook** → **Always**. Edits save safely back to disk with UTF-8, UTF-16, and Windows-1252 support.
 
 ---
 
-## ✨ Recursos Principais
+## ✨ Key Features
 
-- **100% Offline e Local-First:** Sem conta, sem login, sem nuvem obrigatória e zero telemetria. Tudo fica gravado em SQLite nativo com `PRAGMA journal_mode = WAL`.
-- **Editor CodeMirror 6 + Leitor Markdown:** Modos **Edição**, **Dividido (Split)** e **Leitura**, alternáveis com 1 clique.
-- **Organização Fluida:** Projetos, subpastas aninhadas com detecção de ciclos, **Notas Rápidas**, abas múltiplas (até 5 abas simultâneas), fixação (`Pin`) e **reordenação por arrastar e soltar** na barra lateral.
-- **Auto-Save Inteligente & Histórico de Versões:** Debounce de 350ms com rascunho de recuperação contra quedas e snapshots automáticos/manuais restauráveis.
-- **Busca Instantânea (`Ctrl + K`):** Pesquisa indexada em tempo real via SQLite **FTS5** e paleta de comandos estilo Raycast.
-- **System Tray no Windows:** Feche para a bandeja do sistema mantendo acesso rápido e atalho global (`Ctrl + Alt + N`).
-- **Backups Automáticos & Portabilidade:** Backups diários locais (retenção de 7 dias), exportação/restauração completa em `.json` e exportação estruturada de toda a biblioteca em pastas e arquivos `.md`.
+- **100% Offline & Local-First:** Zero accounts, zero mandatory cloud, zero telemetry. Everything lives in native SQLite (`PRAGMA journal_mode = WAL`).
+- **CodeMirror 6 Editor + Markdown Reader:** Switch cleanly between **Edit**, **Split**, and **Read** modes in one click.
+- **Calm Project Organization:** Projects, nested subfolders with cycle protection, **Quick Notes**, multi-tabs (up to 5 open tabs), pinned notes, and smooth drag-and-drop sidebar sorting.
+- **Smart Auto-Save & Version History:** 350ms debounced writes, crash-recovery drafts, and restorable note snapshots.
+- **Instant Search & Command Palette (`Ctrl + K`):** Real-time SQLite **FTS5** full-text search and keyboard-driven actions.
+- **Developer Workflow (Optional):** Build a 1-click **Context Pack**, manage reusable **Prompt Templates**, write **Session Handoffs** and **Dev Journals**, link local project folders, and read local `CLAUDE.md` / `AGENTS.md` instructions and `SKILL.md` skills — without turning your notes app into an IDE.
+- **Multilingual Interface:** Full native support for **English**, **Português (BR)**, and **Español**.
+- **Automatic Local Backups & Updates:** Configurable automatic `.json` backups (12h / daily / weekly with 7–30 day retention), full `.md` folder export, and signed auto-updates via GitHub Releases.
 
 ---
 
-## 🎨 Explore os Recursos Interativos
+## 🎨 Interactive Feature Tour
 
 <details>
-<summary><b>📝 1. Markdown Turbinado (Callouts, Wikilinks, Checkboxes e Frontmatter)</b></summary>
+<summary><b>📝 1. Rich Markdown Engine (Callouts, Wikilinks, Checklists & Frontmatter)</b></summary>
 <br />
 
-O motor de Markdown do Nook suporta recursos avançados prontos para uso:
-
-- **Obsidian Callouts:** `> [!note]`, `> [!tip]`, `> [!warning]`, `> [!important]` renderizados com ícones e destaque visual.
-- **Wikilinks:** `[[Nome da Nota]]` ou `[[Nota Original|Texto Customizado]]` — clique no modo leitura para navegar ou criar a nota instantaneamente.
-- **Checkboxes Interativas:** `- [ ] Tarefa` — clique diretamente no modo de leitura para marcar/desmarcar e atualizar o Markdown em tempo real.
-- **Frontmatter YAML & Hashtags:** Propriedades no topo (`---`) exibidas em cartões organizados + reconhecimento de `#tags` fora de blocos de código.
+- **Formatted Callouts:** `> [!note]`, `> [!tip]`, `> [!warning]`, and `> [!important]` rendered with clean visual accents.
+- **Wikilinks:** `[[Note Name]]` or `[[Target Note|Custom Label]]` — click in Read mode to jump straight to a note or create it on the spot.
+- **Interactive Checklists:** `- [ ] Task` — toggle checkboxes directly in Read mode while updating Markdown live.
+- **YAML Frontmatter & Tags:** Top-of-file metadata (`---`) displayed cleanly alongside inline `#tags`.
 
 </details>
 
 <details>
-<summary><b>🎨 2. Cinco Temas Visuais Integrados (Desktop, Web & Mobile sincronizados)</b></summary>
+<summary><b>🎨 2. Five Crafted Themes (Synced Across Desktop, Web & Mobile)</b></summary>
 <br />
 
-| Tema | Estilo | Destaque |
+| Theme | Aesthetic | Highlight |
 | :--- | :--- | :--- |
-| **Cinza (`gray`)** | Minimalista grafite balanceado | Padrão confortável para leitura prolongada |
-| **Escuro (`dark`)** | Contraste OLED profundo | Preto puro `#000000` para ambientes noturnos |
-| **Claro (`white`)** | Papel limpo e nítido | Alto contraste diurno |
-| **Neon (`neon`)** | Terminal Cyberpunk / Cibersegurança | Preto absoluto, branco e verde neon `#00FF9D` |
-| **Sakura (`sakura`)** | Suave e delicado | Tons escuros acolhedores com destaque rosé |
+| **Gray (`gray`)** | Balanced graphite minimalism | Comfortable default for long writing sessions |
+| **Dark (`dark`)** | Deep OLED contrast | Pure dark surfaces `#090A0D` for night focus |
+| **Light (`white`)** | Warm editorial paper `#FAF9F6` | Crisp daytime readability |
+| **Neon (`neon`)** | Cybersecurity / Terminal | Deep charcoal with `#00FF9D` PCB & grid accents |
+| **Sakura (`sakura`)** | Minimalist Japanese garden | Soft plum tones with `#E89EB8` five-petal cherry blossoms |
 
 </details>
 
 <details>
-<summary><b>📱 3. Nook Web, Nook Mobile & Nook Voice (Sincronização em Tempo Real)</b></summary>
+<summary><b>📱 3. Nook Web, Nook Mobile & Nook Voice (Live Local Sync)</b></summary>
 <br />
 
-- **Nook Web:** Abra sua biblioteca instantaneamente no navegador local (`127.0.0.1`) via servidor **Axum** embutido em Rust com proteção contra DNS Rebinding, sessão `HttpOnly` e WebSocket em tempo real.
-- **Nook Mobile (Wi-Fi e 5G):** Ative o túnel seguro **Cloudflare Quick Tunnel** (`cloudflared`), escaneie o **QR Code offline** no celular e aprove a conexão 2FA diretamente na tela do PC. Seus dados continuam **apenas no seu computador**.
-- **Nook Voice:** Crie notas ou transcrições de reunião por voz no celular ou navegador com persistência progressiva e fila de recuperação offline via IndexedDB.
+- **Nook Web:** Open your library in a desktop browser (`127.0.0.1`) via Nook's embedded Rust **Axum** server with DNS-rebinding protection, `HttpOnly` sessions, and real-time WebSockets.
+- **Nook Mobile (Wi-Fi & 5G):** Toggle **Cloudflare Quick Tunnel** (`cloudflared`), scan the **QR Code** from your phone, and approve 2FA pairing right on your PC. Your notes never leave your machine's storage.
+- **Nook Voice:** Dictate quick notes or meeting transcripts directly from Mobile or Web with offline recovery queuing.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as Você (PC)
+    actor User as You (PC)
     participant Desktop as Nook Desktop (Rust + Axum)
     participant CF as Cloudflare Quick Tunnel
-    actor Phone as Smartphone (Wi-Fi / 5G)
+    actor Phone as Smartphone (Browser)
 
-    User->>Desktop: Ativa Nook Mobile
-    Desktop->>CF: Inicia túnel criptografado (HTTPS)
-    Desktop->>User: Exibe QR Code + Código efêmero (5 min)
-    User->>Phone: Escaneia QR Code com a câmera
-    Phone->>Desktop: Solicita pareamento via Túnel
-    Desktop->>User: Pop-up "Permitir Conexão?"
-    User->>Desktop: Aprova dispositivo no SQLite
-    Desktop-->>Phone: Cookie HttpOnly + WebSocket /ws ativo!
+    User->>Desktop: Enable Nook Mobile
+    Desktop->>CF: Start encrypted HTTPS tunnel
+    Desktop->>User: Show QR Code + 5-min pair code
+    User->>Phone: Scan QR Code
+    Phone->>Desktop: Request pairing via tunnel
+    Desktop->>User: Prompt "Approve Device?"
+    User->>Desktop: Approve in local SQLite
+    Desktop-->>Phone: HttpOnly session + live WebSocket sync
 ```
 
 </details>
 
 <details>
-<summary><b>⌨️ 4. Atalhos de Teclado</b></summary>
+<summary><b>⌨️ 4. Keyboard Shortcuts</b></summary>
 <br />
 
-| Atalho | Ação |
+| Shortcut | Action |
 | :--- | :--- |
-| `Ctrl + N` | Criar nova nota rápida |
-| `Ctrl + Alt + N` | Captura rápida global |
-| `Ctrl + K` ou `Ctrl + P` | Abrir busca instantânea e paleta de comandos |
-| `Ctrl + B` | Recolher / expandir barra lateral |
-| `Ctrl + S` | Forçar salvamento imediato |
-| `Ctrl + ,` | Abrir Configurações |
-| `Ctrl + /` | Abrir guia rápido de atalhos |
-| `Esc` | Fechar modais, menus ou lixeira |
+| `Ctrl + N` | New quick note |
+| `Ctrl + Alt + N` | Global quick capture (Windows) |
+| `Ctrl + K` or `Ctrl + P` | Instant search & command palette |
+| `Ctrl + E` | Cycle Edit / Split / Read view |
+| `Ctrl + B` | Toggle sidebar |
+| `Ctrl + S` | Force immediate save |
+| `Ctrl + ,` | Open Settings |
+| `Ctrl + /` | Quick shortcut guide |
 
 </details>
 
 ---
 
-## 🔒 Privacidade & Arquitetura
+## 🔒 Privacy & Architecture
 
-| Camada | Tecnologia |
+| Layer | Stack |
 | :--- | :--- |
-| **Core Desktop** | Tauri 2 + Rust (Edition 2024) |
-| **Banco de Dados** | SQLite local (`WAL` + `FTS5` + chaves estrangeiras) |
+| **Desktop Core** | Tauri 2 + Rust (Edition 2024) |
+| **Database** | Native SQLite (`WAL` + `FTS5` + foreign keys) |
 | **Frontend** | React 18 + TypeScript + Vite |
 | **Editor & Preview** | CodeMirror 6 + `marked` + `DOMPurify` |
-| **Servidor & Sync** | Axum HTTP/WebSocket + Cloudflare Quick Tunnel opcional |
+| **Sync & Tunnel** | Embedded Axum HTTP/WebSocket + optional Cloudflare Quick Tunnel |
 
-- Nenhuma chave de API, telemetria, conta externa ou servidor central é usado.
-- Todos os arquivos pessoais de notas e preferências permanecem exclusivamente no dispositivo do usuário.
-- Consulte [docs/NOOK_MOBILE.md](./docs/NOOK_MOBILE.md) para detalhes técnicos completos de segurança, pareamento 2FA e arquitetura do túnel.
+- Zero accounts, zero analytics, zero third-party telemetry.
+- All notes, backups, and settings live locally on your computer.
+- See [docs/NOOK_MOBILE.md](./docs/NOOK_MOBILE.md) for the complete mobile pairing security model.
 
 ---
 
-## 🛠️ Compilar do Código-Fonte
+## 🛠️ Build from Source
 
-### Pré-requisitos
-- **Node.js >= 18** e **npm**
-- **Rust >= 1.90** (`rustup` / `cargo`) e pré-requisitos do Tauri para Windows (WebView2 + Build Tools)
-
-### Executar em Desenvolvimento e Testar
+### Prerequisites
+- **Node.js >= 18** and **npm**
+- **Rust >= 1.90** (`rustup` / `cargo`) and Windows Tauri prerequisites (WebView2 + MSVC Build Tools)
 
 ```bash
-# 1. Instalar dependências do frontend
+# 1. Install frontend dependencies
 npm install
 
-# 2. Executar suíte completa de testes e checagem de tipos
+# 2. Run test suite & type check
 npm test
 npx tsc --noEmit
 
-# 3. Rodar aplicativo desktop em desenvolvimento
+# 3. Start desktop development mode
 npm run tauri dev
-```
 
-### Gerar Executável e Instaladores de Produção
-
-```bash
+# 4. Build production executable & Windows installers
 npm run tauri build
 ```
 
-Os pacotes compilados serão gerados em `src-tauri/target/release/` (`app.exe` e bundles `.exe` / `.msi`).
+---
 
-<br />
+## ❤️ Support Nook
+
+Nook is 100% free and open-source — no paywalls, no ads, and no locked Pro features.  
+If Nook helps your daily workflow, consider supporting development on **[GitHub Sponsors](https://github.com/sponsors/zeitgeist2004)**.
 
 <div align="center">
+  <br />
   <img src="./assets/brand/mascot/nook-idle-open.png" alt="Nook Mascot" width="56" />
   <br />
-  <sub>Feito por <a href="https://github.com/zeitgeist2004">zeitgeist2004</a> • Licença <a href="./LICENSE">MIT</a></sub>
+  <sub>Built by <a href="https://github.com/zeitgeist2004">zeitgeist2004</a> • <a href="./LICENSE">MIT License</a></sub>
 </div>

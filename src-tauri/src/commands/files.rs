@@ -22,7 +22,7 @@ pub struct ExternalFileContent {
 }
 
 /// Decode raw file bytes cleanly across UTF-8 (with/without BOM), UTF-16 LE/BE, and Windows-1252 ANSI.
-fn decode_text_bytes(bytes: &[u8]) -> String {
+pub fn decode_text_bytes(bytes: &[u8]) -> String {
     if bytes.starts_with(&[0xEF, 0xBB, 0xBF]) {
         return decode_utf8_or_cp1252(&bytes[3..]);
     }
@@ -136,9 +136,10 @@ pub fn export_library_to_folder(
             .map_err(|e| format!("Falha ao criar diretório de destino: {}", e))?;
     }
 
-    // Fetch collections and notes snapshot, then release SQLite lock before disk I/O
-    let (coll_map, notes_to_export) = {
+    // Fetch active language, collections and notes snapshot, then release SQLite lock before disk I/O
+    let (lang, coll_map, notes_to_export) = {
         let conn = state.conn.lock().map_err(|e| e.to_string())?;
+        let lang = crate::commands::settings::get_active_language(&conn);
 
         // Load active collections
         let mut stmt = conn
@@ -179,8 +180,15 @@ pub fn export_library_to_folder(
             notes_list.push(r.map_err(|e| e.to_string())?);
         }
 
-        (coll_map, notes_list)
+        (lang, coll_map, notes_list)
     }; // Mutex lock is explicitly dropped here!
+
+    let quick_notes_folder = crate::commands::settings::pick_lang(
+        &lang,
+        "Notas Rápidas",
+        "Quick Notes",
+        "Notas Rápidas",
+    );
 
     // Helper to resolve folder path
     let resolve_folder_path = |coll_id: &Option<String>| -> PathBuf {
@@ -198,7 +206,7 @@ pub fn export_library_to_folder(
         parts.reverse();
         let mut path = dest_path.clone();
         if parts.is_empty() {
-            path.push("Notas Rápidas");
+            path.push(quick_notes_folder);
         } else {
             for part in parts {
                 path.push(part);

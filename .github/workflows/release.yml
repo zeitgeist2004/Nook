@@ -1,0 +1,59 @@
+name: Nook Windows Release & Auto-Update
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish-tauri:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Rust stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Verify TypeScript & frontend unit/i18n/UX suites
+        run: |
+          npx tsc --noEmit --noUnusedLocals --noUnusedParameters
+          npm test
+
+      - name: Verify Rust clippy & integrity tests
+        run: |
+          cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
+          cargo test --manifest-path src-tauri/Cargo.toml --release --lib
+          cargo test --manifest-path src-tauri/Cargo.toml --release --test db_tests
+
+      - name: Build signed Windows installers & Tauri updater artifacts
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: v__VERSION__
+          releaseName: 'Nook v__VERSION__'
+          releaseBody: 'Nook Desktop Windows release. Existing notes, projects, settings, and local backups are preserved automatically.'
+          releaseDraft: true
+          prerelease: false
+          includeUpdaterJson: true

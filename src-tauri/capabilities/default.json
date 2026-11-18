@@ -11,6 +11,8 @@
     "dialog:allow-open",
     "dialog:allow-save",
     "fs:default",
-    "window-state:default"
+    "window-state:default",
+    "updater:default",
+    "process:default"
   ]
 }

@@ -13,6 +13,9 @@ import {
 import { AuthorizedDevice, MobileAccessInfo } from '../../types';
 import { api } from '../../services/api';
 import { QRCodeSvg } from './QRCodeSvg';
+import { useTranslation } from '../../i18n';
+import { useDialogA11y } from '../../hooks/useDialogA11y';
+import { ContextualHint } from '../ui/ContextualHint';
 
 interface NookMobileModalProps {
   isOpen: boolean;
@@ -20,6 +23,7 @@ interface NookMobileModalProps {
 }
 
 export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClose }) => {
+  const { t, format } = useTranslation();
   const [mobileInfo, setMobileInfo] = useState<MobileAccessInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -35,6 +39,8 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
     }
   }, []);
 
+  useDialogA11y({ isOpen, onClose });
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -44,14 +50,6 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
     let isCancelled = false;
     let unlistenUpdated: (() => void) | undefined;
     let unlistenStatus: (() => void) | undefined;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
 
     if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
       import('@tauri-apps/api/event').then(({ listen }) => {
@@ -81,11 +79,10 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
 
     return () => {
       isCancelled = true;
-      window.removeEventListener('keydown', handleKeyDown);
       if (unlistenUpdated) unlistenUpdated();
       if (unlistenStatus) unlistenStatus();
     };
-  }, [isOpen, loadStatus, onClose]);
+  }, [isOpen, loadStatus]);
 
   if (!isOpen) return null;
 
@@ -97,7 +94,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
       setMobileInfo(info);
     } catch (err: any) {
       console.error('Failed to start mobile access:', err);
-      setActionError(err?.message || 'Falha ao iniciar o túnel Cloudflare');
+      setActionError(err?.message || t.mobile.modalStartError);
     } finally {
       setLoading(false);
     }
@@ -111,7 +108,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
       await loadStatus();
     } catch (err: any) {
       console.error('Failed to stop mobile access:', err);
-      setActionError(err?.message || 'Falha ao desativar o túnel');
+      setActionError(err?.message || t.mobile.modalStopError);
     } finally {
       setLoading(false);
     }
@@ -126,7 +123,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
       setMobileInfo(info);
     } catch (err: any) {
       console.error('Failed to restart mobile access:', err);
-      setActionError(err?.message || 'Falha ao reiniciar o túnel Cloudflare');
+      setActionError(err?.message || t.mobile.modalRestartError);
     } finally {
       setLoading(false);
     }
@@ -153,7 +150,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
       await loadStatus();
     } catch (err: any) {
       console.error('Failed to revoke device:', err);
-      setActionError(err?.message || 'Erro ao revogar dispositivo');
+      setActionError(err?.message || t.mobile.modalRevokeError);
     }
   };
 
@@ -163,14 +160,14 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
       await loadStatus();
     } catch (err: any) {
       console.error('Failed to delete device:', err);
-      setActionError(err?.message || 'Erro ao remover dispositivo');
+      setActionError(err?.message || t.mobile.modalDeleteError);
     }
   };
 
   const formatTimestamp = (ts: number) => {
     try {
       const d = new Date(ts);
-      return d.toLocaleDateString('pt-BR', {
+      return d.toLocaleDateString(t.meta.dateLocale, {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -201,10 +198,12 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Nook Mobile"
         style={{
-          width: '100%',
-          maxWidth: '640px',
-          maxHeight: '90vh',
+          width: 'min(94vw, 640px)',
+          maxHeight: 'min(90dvh, var(--nook-viewport-height, 90dvh))',
           backgroundColor: 'var(--bg-elevated, #1A1C22)',
           border: '1px solid var(--border-color, #2D3039)',
           borderRadius: '16px',
@@ -268,7 +267,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                     border: `1px solid ${isActive ? 'rgba(16, 185, 129, 0.25)' : 'transparent'}`,
                   }}
                 >
-                  {isActive ? 'Túnel Ativo' : 'Desconectado'}
+                  {isActive ? t.mobile.modalTunnelActiveBadge : t.mobile.modalDisconnectedBadge}
                 </span>
               </div>
               <p
@@ -278,7 +277,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                   color: 'var(--text-secondary, #9CA3AF)',
                 }}
               >
-                Acesse e edite suas notas pelo celular com túnel seguro Cloudflare
+                {t.mobile.modalSubtitle}
               </p>
             </div>
           </div>
@@ -314,13 +313,19 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
         {/* Modal Body */}
         <div
           style={{
-            padding: '24px',
+            padding: '20px',
             overflowY: 'auto',
             display: 'flex',
             flexDirection: 'column',
-            gap: '20px',
+            gap: '16px',
           }}
         >
+          <ContextualHint
+            tipId="mobile_sync"
+            title={t.ux.tipMobileTitle}
+            description={t.ux.tipMobileDesc}
+            compact
+          />
           {actionError && (
             <div
               style={{
@@ -380,7 +385,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                     color: 'var(--text-primary, #FFFFFF)',
                   }}
                 >
-                  Suas anotações no seu bolso
+                  {t.mobile.modalPocketTitle}
                 </h3>
                 <p
                   style={{
@@ -391,15 +396,13 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                     maxWidth: '460px',
                   }}
                 >
-                  Conecte seu celular diretamente a este computador usando a rede global da Cloudflare. Sem
-                  abertura de portas, sem contas e com criptografia de ponta a ponta.
+                  {t.mobile.modalPocketDesc}
                 </p>
               </div>
 
               <div
+                className="nook-responsive-grid-3"
                 style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
                   gap: '12px',
                   width: '100%',
                   marginTop: '6px',
@@ -416,9 +419,9 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                   }}
                 >
                   <strong style={{ display: 'block', color: 'var(--text-primary, #FFF)', marginBottom: '4px' }}>
-                    Wi-Fi & 5G
+                    {t.mobile.modalWifi5gTitle}
                   </strong>
-                  Funciona em qualquer rede externa
+                  {t.mobile.modalWifi5gDesc}
                 </div>
 
                 <div
@@ -432,9 +435,9 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                   }}
                 >
                   <strong style={{ display: 'block', color: 'var(--text-primary, #FFF)', marginBottom: '4px' }}>
-                    100% Privado
+                    {t.mobile.modalPrivateTitle}
                   </strong>
-                  Seus dados não saem do seu PC
+                  {t.mobile.modalPrivateDesc}
                 </div>
 
                 <div
@@ -448,9 +451,9 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                   }}
                 >
                   <strong style={{ display: 'block', color: 'var(--text-primary, #FFF)', marginBottom: '4px' }}>
-                    Pareamento 2FA
+                    {t.mobile.modalPair2faTitle}
                   </strong>
-                  Apenas celulares aprovados
+                  {t.mobile.modalPair2faDesc}
                 </div>
               </div>
 
@@ -484,12 +487,12 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                 {loading ? (
                   <>
                     <RefreshCw size={16} className="animate-spin" />
-                    <span>Iniciando túnel seguro Cloudflare...</span>
+                    <span>{t.mobile.modalStartingTunnel}</span>
                   </>
                 ) : (
                   <>
                     <Power size={16} />
-                    <span>Ativar Nook Mobile</span>
+                    <span>{t.mobile.modalActivateMobile}</span>
                   </>
                 )}
               </button>
@@ -501,11 +504,13 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                 style={{
                   display: 'flex',
                   flexDirection: 'row',
-                  gap: '24px',
+                  flexWrap: 'wrap',
+                  justifyContent: 'center',
+                  gap: '20px',
                   backgroundColor: 'var(--bg-main, #121316)',
                   borderRadius: '14px',
                   border: '1px solid var(--border-subtle, rgba(255,255,255,0.06))',
-                  padding: '24px',
+                  padding: '20px',
                   alignItems: 'center',
                 }}
               >
@@ -520,7 +525,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                       color: 'var(--text-muted, #6B7280)',
                     }}
                   >
-                    Escaneie com a câmera
+                    {t.mobile.modalScanCamera}
                   </span>
                 </div>
 
@@ -528,7 +533,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                 <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   <div>
                     <span style={{ fontSize: '11px', fontWeight: 600, color: '#10B981', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      Conexão Pronta
+                      {t.mobile.modalConnectionReady}
                     </span>
                     <h4
                       style={{
@@ -538,7 +543,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                         color: 'var(--text-primary, #FFFFFF)',
                       }}
                     >
-                      Aponte a câmera do seu celular
+                      {t.mobile.modalPointCamera}
                     </h4>
                     <p
                       style={{
@@ -548,7 +553,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                         color: 'var(--text-secondary, #9CA3AF)',
                       }}
                     >
-                      O link contém um código único de autorização válido por 5 minutos.
+                      {t.mobile.modalCodeValid5Min}
                     </p>
                   </div>
 
@@ -566,7 +571,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                     >
                       <div>
                         <div style={{ fontSize: '11px', color: 'var(--text-muted, #6B7280)' }}>
-                          Código de Pareamento
+                          {t.mobile.modalPairCode}
                         </div>
                         <div
                           style={{
@@ -599,7 +604,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                         }}
                       >
                         {copiedCode ? <Check size={12} /> : <Copy size={12} />}
-                        <span>{copiedCode ? 'Copiado!' : 'Copiar'}</span>
+                        <span>{copiedCode ? t.mobile.modalCopied : t.mobile.modalCopy}</span>
                       </button>
                     </div>
                   )}
@@ -626,13 +631,13 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                       }}
                     >
                       {copiedLink ? <Check size={13} /> : <Copy size={13} />}
-                      <span>{copiedLink ? 'Link Copiado!' : 'Copiar Link Completo'}</span>
+                      <span>{copiedLink ? t.settings.linkCopied : t.mobile.modalCopyFullLink}</span>
                     </button>
 
                     <button
                       onClick={handleRestart}
                       disabled={loading}
-                      title="Gerar novo link seguro do Cloudflare Tunnel"
+                      title={t.mobile.modalNewLinkTooltip}
                       style={{
                         height: '34px',
                         padding: '0 12px',
@@ -651,7 +656,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                       }}
                     >
                       <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-                      <span>{loading ? 'Reiniciando...' : 'Novo Link'}</span>
+                      <span>{loading ? t.mobile.modalRestarting : t.mobile.modalNewLink}</span>
                     </button>
                   </div>
                 </div>
@@ -676,7 +681,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                       letterSpacing: '-0.01em',
                     }}
                   >
-                    Dispositivos Autorizados ({mobileInfo?.authorized_devices?.length || 0})
+                    {format(t.mobile.modalAuthorizedDevices, { count: mobileInfo?.authorized_devices?.length || 0 })}
                   </h4>
 
                   <button
@@ -693,7 +698,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                     }}
                   >
                     <RefreshCw size={11} />
-                    <span>Atualizar</span>
+                    <span>{t.mobile.modalRefresh}</span>
                   </button>
                 </div>
 
@@ -759,9 +764,9 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                               }}
                             >
                               {device.is_revoked ? (
-                                <span style={{ color: '#EF4444' }}>Acesso Revogado</span>
+                                <span style={{ color: '#EF4444' }}>{t.mobile.modalRevoked}</span>
                               ) : (
-                                <span>Conectado em {formatTimestamp(device.created_at)}</span>
+                                <span>{format(t.mobile.modalConnectedAt, { date: formatTimestamp(device.created_at) })}</span>
                               )}
                             </div>
                           </div>
@@ -790,7 +795,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                                 e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.08)';
                               }}
                             >
-                              Revogar
+                              {t.mobile.modalRevoke}
                             </button>
                           ) : (
                             <button
@@ -807,7 +812,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                                 alignItems: 'center',
                                 justifyContent: 'center',
                               }}
-                              title="Remover histórico deste dispositivo"
+                              title={t.mobile.modalRemoveHistoryTooltip}
                             >
                               <Trash2 size={13} />
                             </button>
@@ -828,7 +833,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                       color: 'var(--text-muted, #6B7280)',
                     }}
                   >
-                    Nenhum celular conectado ainda. Escaneie o QR Code acima para parear.
+                    {t.mobile.modalNoMobileConnected}
                   </div>
                 )}
               </div>
@@ -850,7 +855,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <ShieldCheck size={16} style={{ color: '#10B981' }} />
             <span style={{ fontSize: '12px', color: 'var(--text-secondary, #9CA3AF)' }}>
-              Acesso restrito à sua chave local no Windows
+              {t.mobile.modalWindowsKeyRestriction}
             </span>
           </div>
 
@@ -875,7 +880,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                 }}
               >
                 <Power size={13} />
-                <span>Desativar Túnel</span>
+                <span>{t.mobile.modalStopTunnel}</span>
               </button>
             )}
 
@@ -893,7 +898,7 @@ export const NookMobileModal: React.FC<NookMobileModalProps> = ({ isOpen, onClos
                 cursor: 'pointer',
               }}
             >
-              Fechar
+              {t.mobile.modalClose}
             </button>
           </div>
         </div>

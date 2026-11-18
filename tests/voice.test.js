@@ -76,15 +76,17 @@ assert(serviceCode.includes("error === 'audio-capture'"), 'Erro audio-capture de
 assert(serviceCode.includes("error === 'network'"), 'Erro de rede deve colocar motor em estado de reconexão');
 console.log('✓ Teste 5: Todos os erros previstos tratados com mensagens amigáveis.');
 
+const ptLocaleCode = fs.readFileSync(path.join(rootDir, 'src', 'i18n', 'locales', 'pt.ts'), 'utf-8');
+
 // ----------------------------------------------------------------------------
 // TESTE 6: Dois Modos de Utilização (Nota por Voz & Reunião)
 // ----------------------------------------------------------------------------
 console.log('Teste 6: Validando dois modos de uso e formatação de Markdown...');
 const hookCode = fs.readFileSync(voiceHookPath, 'utf-8');
 assert(hookCode.includes("currentMode === 'meeting'"), 'Deve suportar alternância entre Nota e Reunião');
-assert(hookCode.includes("Reunião — "), 'Título padrão para reuniões deve seguir formato');
-assert(hookCode.includes("Nota por voz — "), 'Título padrão para notas deve seguir formato');
-assert(hookCode.includes("Transcrição de reunião autorizada pelos participantes"), 'Modo reunião deve incluir aviso de consentimento');
+assert(hookCode.includes('noteTitleMeetingPrefix') && ptLocaleCode.includes('Reunião — '), 'Título padrão para reuniões deve seguir formato');
+assert(hookCode.includes('noteTitleVoicePrefix') && ptLocaleCode.includes('Nota por voz — '), 'Título padrão para notas deve seguir formato');
+assert(hookCode.includes('mdMeetingConsent') && ptLocaleCode.includes('Transcrição de reunião autorizada pelos participantes'), 'Modo reunião deve incluir aviso de consentimento');
 assert(hookCode.includes("[${seg.timeFormatted}]"), 'Cada segmento deve ser registrado com timestamp [HH:MM]');
 console.log('✓ Teste 6: Modos Nota por Voz e Transcrição de Reunião com Markdown validados.');
 
@@ -129,7 +131,7 @@ assert(!modalCode.includes('#FF0000') && !modalCode.includes('#ff0000') && !moda
 assert(!modalCode.includes('linear-gradient'), 'Não deve conter gradientes chamativos');
 assert(modalCode.includes('NookIdleMascot'), 'Deve incluir representação discreta do mascote oficial Nook');
 assert(modalCode.includes('formatTimer'), 'Cronômetro visual no formato MM:SS deve estar presente');
-assert(modalCode.includes('Privacy & Reconhecimento de Voz') || modalCode.includes('Privacidade'), 'Aviso explícito de privacidade antes do primeiro uso');
+assert(modalCode.includes('t.voice.privacyTitle') && ptLocaleCode.includes('Privacidade'), 'Aviso explícito de privacidade antes do primeiro uso');
 console.log('✓ Teste 10: Interface estritamente monocromática e aviso de privacidade validados.');
 
 // ----------------------------------------------------------------------------
@@ -139,7 +141,7 @@ console.log('Teste 11: Validando integração com botão de microfone no header 
 const topBarCode = fs.readFileSync(path.join(rootDir, 'src', 'components', 'mobile', 'MobileTopBar.tsx'), 'utf-8');
 assert(topBarCode.includes('onOpenVoice'), 'MobileTopBar deve aceitar onOpenVoice');
 assert(topBarCode.includes('<Mic'), 'MobileTopBar deve renderizar ícone Mic');
-assert(topBarCode.includes('Nova nota por voz'), 'Identificação acessível "Nova nota por voz" presente');
+assert(topBarCode.includes('t.mobile.newVoiceNote') && ptLocaleCode.includes('Nova nota por voz'), 'Identificação acessível "Nova nota por voz" presente');
 
 const appCode = fs.readFileSync(path.join(rootDir, 'src', 'app', 'App.tsx'), 'utf-8');
 assert(appCode.includes('isVoiceModalOpen'), 'App.tsx deve gerenciar estado do modal de voz');

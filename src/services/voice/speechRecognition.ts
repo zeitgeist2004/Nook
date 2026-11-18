@@ -10,6 +10,7 @@ import {
   SpeechRecognitionConstructor,
   VoiceStatus,
 } from '../../types/speech';
+import { formatMessage, getTranslations } from '../../i18n';
 
 export interface SpeechEngineCallbacks {
   onStatusChange: (status: VoiceStatus, message?: string) => void;
@@ -37,6 +38,13 @@ export class SpeechRecognitionService {
     this.lang = lang;
   }
 
+  setLang(lang: string) {
+    this.lang = lang;
+    if (this.recognition) {
+      this.recognition.lang = lang;
+    }
+  }
+
   static isSupported(): boolean {
     if (typeof window === 'undefined') return false;
     return !!(
@@ -56,11 +64,9 @@ export class SpeechRecognitionService {
 
   private initEngine(): boolean {
     const Ctor = SpeechRecognitionService.getConstructor();
+    const { voice } = getTranslations();
     if (!Ctor) {
-      this.callbacks.onError(
-        'Reconhecimento de voz não suportado neste navegador. Utilize Google Chrome ou Safari.',
-        true
-      );
+      this.callbacks.onError(voice.errUnsupportedBrowser, true);
       return false;
     }
 
@@ -140,33 +146,34 @@ export class SpeechRecognitionService {
         }
 
         if (error === 'not-allowed' || error === 'service-not-allowed') {
+          const { voice } = getTranslations();
           this.isUserActive = false;
           this.hasFatalError = true;
           const isService = error === 'service-not-allowed';
           this.callbacks.onStatusChange(
             'error',
-            isService ? 'Serviço recusado pelo iOS' : 'Permissão necessária'
+            isService ? voice.errIosServiceDenied : voice.errPermissionRequired
           );
           this.callbacks.onError(
-            isService
-              ? 'O reconhecimento automático foi bloqueado pelo iOS para este endereço [service-not-allowed]. Utilize o Método 2 (Ditado por Teclado) abaixo para falar com o microfone nativo do seu iPhone.'
-              : 'Permissão de reconhecimento de voz necessária [not-allowed]. No Safari, toque no ícone "aA" na barra de endereço → "Ajustes do Site" → "Microfone: Permitir". Depois toque em "Tentar Novamente".',
+            isService ? voice.errIosBlockedMsg : voice.errNotAllowedMsg,
             true
           );
           return;
         }
 
         if (error === 'audio-capture') {
+          const { voice } = getTranslations();
           this.isUserActive = false;
           this.hasFatalError = true;
-          this.callbacks.onStatusChange('error', 'Sem microfone');
-          this.callbacks.onError('Nenhum microfone detectado no dispositivo.', true);
+          this.callbacks.onStatusChange('error', voice.errNoMicShort);
+          this.callbacks.onError(voice.errNoMicMsg, true);
           return;
         }
 
         if (error === 'network') {
-          this.callbacks.onStatusChange('reconnecting', 'Erro de rede');
-          this.callbacks.onError('Instabilidade de conexão no serviço de voz do navegador.', false);
+          const { voice } = getTranslations();
+          this.callbacks.onStatusChange('reconnecting', voice.errNetworkShort);
+          this.callbacks.onError(voice.errNetworkMsg, false);
           return;
         }
 
@@ -175,7 +182,7 @@ export class SpeechRecognitionService {
           return;
         }
 
-        this.callbacks.onError(`Erro no reconhecimento: ${error}`, false);
+        this.callbacks.onError(`Speech recognition error: ${error}`, false);
       };
 
       this.recognition.onend = () => {
@@ -192,13 +199,11 @@ export class SpeechRecognitionService {
           this.lastRestartTimestamp = now;
 
           if (this.consecutiveRestarts > 5) {
+            const { voice } = getTranslations();
             // Rapid failure loop protection: pause and prompt user
             this.isPaused = true;
-            this.callbacks.onStatusChange('paused', 'Transcrição pausada');
-            this.callbacks.onError(
-              'O navegador pausou o reconhecimento. Toque em "Retomar" para continuar.',
-              false
-            );
+            this.callbacks.onStatusChange('paused', voice.statusPaused);
+            this.callbacks.onError(voice.errBrowserPaused, false);
             return;
           }
 
@@ -232,7 +237,11 @@ export class SpeechRecognitionService {
 
       return true;
     } catch (err: any) {
-      this.callbacks.onError(`Falha ao instanciar reconhecimento: ${err?.message || err}`, true);
+      const { voice } = getTranslations();
+      this.callbacks.onError(
+        formatMessage(voice.errInstantiateFailed, { msg: String(err?.message || err) }),
+        true
+      );
       return false;
     }
   }
@@ -248,12 +257,10 @@ export class SpeechRecognitionService {
     this.clearPermissionTimeout();
     this.permissionWatchdogTimer = setTimeout(() => {
       if (this.isUserActive && !this.isPaused) {
+        const { voice } = getTranslations();
         console.warn('SpeechRecognition: permission/start timed out');
-        this.callbacks.onStatusChange('error', 'Tempo limite esgotado');
-        this.callbacks.onError(
-          'O microfone demorou para responder. Toque em "Tentar Novamente" abaixo para gravar.',
-          false
-        );
+        this.callbacks.onStatusChange('error', voice.errTimeoutShort);
+        this.callbacks.onError(voice.errTimeoutMsg, false);
       }
     }, 7000);
   }
@@ -267,11 +274,12 @@ export class SpeechRecognitionService {
     } catch (err: any) {
       // If already started or transitioning, catch and retry briefly
       if (err?.name !== 'InvalidStateError') {
+        const { voice } = getTranslations();
         console.warn('SpeechRecognition start warning:', err);
         this.clearPermissionTimeout();
-        this.callbacks.onStatusChange('error', 'Falha ao iniciar');
+        this.callbacks.onStatusChange('error', voice.errStartFailedShort);
         this.callbacks.onError(
-          `Falha ao iniciar microfone: ${err?.message || err}. Toque em "Tentar Novamente".`,
+          formatMessage(voice.errStartFailedMsg, { msg: String(err?.message || err) }),
           true
         );
       }

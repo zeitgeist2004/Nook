@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Smartphone, Shield, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 import { api } from '../../services/api';
 import { NookIdleMascot } from '../mascot/NookMascot';
+import { useTranslation } from '../../i18n';
 
 interface MobilePairingViewProps {
   pairCode: string;
@@ -12,13 +13,14 @@ export const MobilePairingView: React.FC<MobilePairingViewProps> = ({
   pairCode,
   onPairSuccess,
 }) => {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<'requesting' | 'waiting_desktop' | 'approved' | 'rejected' | 'error'>('requesting');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [requestId, setRequestId] = useState<string | null>(null);
   const pollTimerRef = useRef<any>(null);
 
   const getDeviceName = () => {
-    if (typeof navigator === 'undefined') return 'Dispositivo Móvel';
+    if (typeof navigator === 'undefined') return t.mobile.pairingDefaultDevice;
     const ua = navigator.userAgent;
     if (/iPhone/i.test(ua)) return 'Apple iPhone';
     if (/iPad/i.test(ua)) return 'Apple iPad';
@@ -27,11 +29,11 @@ export const MobilePairingView: React.FC<MobilePairingViewProps> = ({
       if (match && match[1]) {
         return match[1].replace(/Build\/.*/, '').trim();
       }
-      return 'Smartphone Android';
+      return t.mobile.pairingAndroidSmartphone;
     }
     if (/Macintosh/i.test(ua)) return 'Mac';
-    if (/Windows/i.test(ua)) return 'Computador Windows';
-    return 'Navegador Web';
+    if (/Windows/i.test(ua)) return t.mobile.pairingWindowsPc;
+    return t.mobile.pairingWebBrowser;
   };
 
   const startPairing = async () => {
@@ -46,15 +48,15 @@ export const MobilePairingView: React.FC<MobilePairingViewProps> = ({
         setStatus('waiting_desktop');
       } else {
         setStatus('error');
-        setErrorMessage('Não foi possível registrar solicitação de pareamento.');
+        setErrorMessage(t.mobile.pairingRequestError);
       }
     } catch (err: any) {
       console.error('Pairing request error:', err);
       setStatus('error');
       setErrorMessage(
         err?.message?.includes('400')
-          ? 'Código de pareamento inválido ou expirado.'
-          : 'Erro ao conectar ao Nook Desktop. Verifique se o aplicativo está aberto no PC.'
+          ? t.mobile.pairingInvalidCode
+          : t.mobile.pairingConnectDesktopError
       );
     }
   };
@@ -152,12 +154,12 @@ export const MobilePairingView: React.FC<MobilePairingViewProps> = ({
             }}
           >
             {status === 'approved'
-              ? 'Conexão autorizada com sucesso!'
+              ? t.mobile.pairingApprovedTitle
               : status === 'waiting_desktop'
-              ? 'Confirme a solicitação no seu computador.'
+              ? t.mobile.pairingWaitingTitle
               : status === 'rejected'
-              ? 'Pareamento não autorizado.'
-              : 'Conectando ao Nook Desktop...'}
+              ? t.mobile.pairingRejectedTitle
+              : t.mobile.pairingConnectingTitle}
           </p>
         </div>
 
@@ -208,7 +210,7 @@ export const MobilePairingView: React.FC<MobilePairingViewProps> = ({
               </div>
 
               <div>
-                <div style={{ fontSize: '14px', fontWeight: 600 }}>Aguardando Aprovação</div>
+                <div style={{ fontSize: '14px', fontWeight: 600 }}>{t.mobile.pairingAwaitingApproval}</div>
                 <div
                   style={{
                     fontSize: '12px',
@@ -217,7 +219,9 @@ export const MobilePairingView: React.FC<MobilePairingViewProps> = ({
                     lineHeight: 1.4,
                   }}
                 >
-                  Um aviso apareceu na tela do seu computador. Clique em <strong>Permitir Conexão</strong> para autorizar este smartphone.
+                  {t.mobile.pairingAwaitingDescBefore}
+                  <strong>{t.mobile.pairingAllowConnectionBtn}</strong>
+                  {t.mobile.pairingAwaitingDescAfter}
                 </div>
               </div>
 
@@ -234,7 +238,7 @@ export const MobilePairingView: React.FC<MobilePairingViewProps> = ({
                 }}
               >
                 <Shield size={12} style={{ color: '#10B981' }} />
-                <span>Criptografia de Ponta a Ponta</span>
+                <span>{t.mobile.pairingE2e}</span>
               </div>
             </>
           )}
@@ -243,10 +247,10 @@ export const MobilePairingView: React.FC<MobilePairingViewProps> = ({
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
               <CheckCircle2 size={44} style={{ color: '#10B981' }} />
               <div style={{ fontSize: '15px', fontWeight: 600, color: '#10B981' }}>
-                Dispositivo Pareado!
+                {t.mobile.pairingPairedSuccess}
               </div>
               <div style={{ fontSize: '12px', color: 'var(--text-secondary, #9CA3AF)' }}>
-                Carregando suas anotações...
+                {t.mobile.pairingLoadingNotes}
               </div>
             </div>
           )}
@@ -255,10 +259,10 @@ export const MobilePairingView: React.FC<MobilePairingViewProps> = ({
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
               <AlertCircle size={44} style={{ color: '#EF4444' }} />
               <div style={{ fontSize: '14px', fontWeight: 600, color: '#EF4444' }}>
-                Solicitação Recusada
+                {t.mobile.pairingRejectedRequestTitle}
               </div>
               <div style={{ fontSize: '12px', color: 'var(--text-secondary, #9CA3AF)' }}>
-                {errorMessage || 'A conexão foi rejeitada no computador ou o código expirou.'}
+                {errorMessage || t.mobile.pairingRejectedDefaultDesc}
               </div>
               <button
                 onClick={startPairing}
@@ -279,7 +283,7 @@ export const MobilePairingView: React.FC<MobilePairingViewProps> = ({
                 }}
               >
                 <RefreshCw size={14} />
-                <span>Tentar Novamente</span>
+                <span>{t.mobile.pairingTryAgain}</span>
               </button>
             </div>
           )}
@@ -288,7 +292,7 @@ export const MobilePairingView: React.FC<MobilePairingViewProps> = ({
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
               <AlertCircle size={44} style={{ color: '#EF4444' }} />
               <div style={{ fontSize: '14px', fontWeight: 600, color: '#EF4444' }}>
-                Erro de Conexão
+                {t.mobile.pairingConnectionErrorTitle}
               </div>
               <div style={{ fontSize: '12px', color: 'var(--text-secondary, #9CA3AF)' }}>
                 {errorMessage}
@@ -312,7 +316,7 @@ export const MobilePairingView: React.FC<MobilePairingViewProps> = ({
                 }}
               >
                 <RefreshCw size={14} />
-                <span>Tentar Novamente</span>
+                <span>{t.mobile.pairingTryAgain}</span>
               </button>
             </div>
           )}

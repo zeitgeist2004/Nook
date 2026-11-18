@@ -62,10 +62,17 @@ pub fn save_note(
         && existing.updated_at > expected_updated_at
         && existing.content != content
     {
+        let lang = crate::commands::settings::get_active_language(&conn);
+        let conflict_label = crate::commands::settings::pick_lang(
+            &lang,
+            "Conflito Sincronizado",
+            "Synced Conflict",
+            "Conflicto Sincronizado",
+        );
         let _ = DbQueries::create_note_version(
             &conn,
             &id,
-            &format!("{} (Conflito Sincronizado)", existing.title),
+            &format!("{} ({})", existing.title, conflict_label),
             &existing.content,
         );
     }

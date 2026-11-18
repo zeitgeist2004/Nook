@@ -9,7 +9,10 @@ import {
 } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { markdown } from '@codemirror/lang-markdown';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { tags } from '@lezer/highlight';
 import { searchKeymap } from '@codemirror/search';
+import { ReadingWidth } from '../../types';
 
 interface CodeMirrorEditorProps {
   content: string;
@@ -18,11 +21,55 @@ interface CodeMirrorEditorProps {
   lineWrapping?: boolean;
   fontSize?: number;
   fontFamily?: string;
+  lineHeight?: number;
+  readingWidth?: ReadingWidth;
 }
 
 const lineNumbersCompartment = new Compartment();
 const lineWrappingCompartment = new Compartment();
-const fontSizeCompartment = new Compartment();
+const typographyCompartment = new Compartment();
+
+const MEASURE_MAP: Record<ReadingWidth, string> = {
+  comfortable: '70ch',
+  wide: '940px',
+  full: '100%',
+};
+
+const nookMarkdownHighlight = HighlightStyle.define([
+  { tag: tags.heading1, class: 'cm-nook-h1' },
+  { tag: tags.heading2, class: 'cm-nook-h2' },
+  { tag: [tags.heading3, tags.heading4, tags.heading5, tags.heading6], class: 'cm-nook-h3' },
+  { tag: tags.strong, class: 'cm-nook-strong' },
+  { tag: tags.emphasis, class: 'cm-nook-em' },
+  { tag: tags.link, class: 'cm-nook-link' },
+  { tag: tags.url, class: 'cm-nook-url' },
+  { tag: tags.quote, class: 'cm-nook-quote' },
+  { tag: tags.monospace, class: 'cm-nook-code' },
+  { tag: [tags.processingInstruction, tags.meta], class: 'cm-nook-meta' },
+  { tag: tags.list, class: 'cm-nook-list' },
+  { tag: tags.contentSeparator, class: 'cm-nook-hr' },
+]);
+
+function buildTypographyTheme(
+  fontSize: number,
+  fontFamily: string,
+  lineHeight: number,
+  readingWidth: ReadingWidth
+) {
+  const maxMeasure = MEASURE_MAP[readingWidth] || '70ch';
+  return EditorView.theme({
+    '&': {
+      fontSize: `${fontSize}px`,
+      fontFamily,
+    },
+    '.cm-scroller': {
+      lineHeight: String(lineHeight),
+    },
+    '.cm-content': {
+      maxWidth: `min(100%, ${maxMeasure}) !important`,
+    },
+  });
+}
 
 export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
   content,
@@ -31,21 +78,23 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
   lineWrapping = true,
   fontSize = 15,
   fontFamily = "'Inter', sans-serif",
+  lineHeight = 1.65,
+  readingWidth = 'comfortable',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const isUpdatingRef = useRef(false);
   const lastValueRef = useRef(content);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
 
-  // Initialize editor
+  // Initialize editor once per mounted instance (never destroyed on theme/style changes)
   useEffect(() => {
     if (!containerRef.current) return;
 
     const baseTheme = EditorView.theme({
       '&': {
         height: '100%',
-        fontSize: `${fontSize}px`,
-        fontFamily: fontFamily,
         backgroundColor: 'transparent',
       },
       '.cm-scroller': {
@@ -59,7 +108,7 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
         borderLeftColor: 'var(--accent)',
       },
       '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
-        backgroundColor: 'rgba(255, 255, 255, 0.16)',
+        backgroundColor: 'var(--md-selection-bg)',
       },
       '.cm-panels': {
         backgroundColor: 'var(--bg-elevated)',
@@ -90,7 +139,7 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
       if (update.docChanged && !isUpdatingRef.current) {
         const val = update.state.doc.toString();
         lastValueRef.current = val;
-        onChange(val);
+        onChangeRef.current(val);
       }
     });
 
@@ -99,16 +148,15 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
       extensions: [
         history(),
         markdown(),
+        syntaxHighlighting(nookMarkdownHighlight),
         baseTheme,
         highlightActiveLine(),
         highlightActiveLineGutter(),
         keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
         lineNumbersCompartment.of(showLineNumbers ? cmLineNumbers() : []),
         lineWrappingCompartment.of(lineWrapping ? EditorView.lineWrapping : []),
-        fontSizeCompartment.of(
-          EditorView.theme({
-            '&': { fontSize: `${fontSize}px`, fontFamily },
-          })
+        typographyCompartment.of(
+          buildTypographyTheme(fontSize, fontFamily, lineHeight, readingWidth)
         ),
         updateListener,
       ],
@@ -132,13 +180,17 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
     const view = viewRef.current;
     if (!view) return;
 
-    // Avoid expensive doc stringification if change originated from editor typing
     if (content === lastValueRef.current) {
       return;
     }
 
     const currentDoc = view.state.doc.toString();
     if (content !== currentDoc) {
+      const prevSel = view.state.selection.main;
+      const prevScrollTop = view.scrollDOM.scrollTop;
+      const clampedAnchor = Math.min(prevSel.anchor, content.length);
+      const clampedHead = Math.min(prevSel.head, content.length);
+
       isUpdatingRef.current = true;
       view.dispatch({
         changes: {
@@ -146,10 +198,17 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
           to: currentDoc.length,
           insert: content,
         },
+        selection: { anchor: clampedAnchor, head: clampedHead },
+        scrollIntoView: false,
         annotations: Transaction.addToHistory.of(false),
       });
       lastValueRef.current = content;
       isUpdatingRef.current = false;
+      requestAnimationFrame(() => {
+        if (viewRef.current) {
+          viewRef.current.scrollDOM.scrollTop = prevScrollTop;
+        }
+      });
     }
   }, [content]);
 
@@ -177,19 +236,17 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
     }
   }, [lineWrapping]);
 
-  // Update font size dynamically
+  // Reconfigure typography & reading column measure dynamically without recreating editor
   useEffect(() => {
     const view = viewRef.current;
     if (view) {
       view.dispatch({
-        effects: fontSizeCompartment.reconfigure(
-          EditorView.theme({
-            '&': { fontSize: `${fontSize}px`, fontFamily },
-          })
+        effects: typographyCompartment.reconfigure(
+          buildTypographyTheme(fontSize, fontFamily, lineHeight, readingWidth)
         ),
       });
     }
-  }, [fontSize, fontFamily]);
+  }, [fontSize, fontFamily, lineHeight, readingWidth]);
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />;
 };

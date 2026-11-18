@@ -32,6 +32,7 @@
   },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": true,
     "targets": "all",
     "icon": [
       "icons/32x32.png",
@@ -44,15 +45,26 @@
       {
         "ext": ["md", "markdown"],
         "name": "Markdown Document",
-        "description": "Arquivo Markdown Nook",
+        "description": "Markdown Note — Nook",
         "role": "Editor"
       },
       {
         "ext": ["txt"],
         "name": "Text Document",
-        "description": "Arquivo de Texto Nook",
+        "description": "Text Note — Nook",
         "role": "Editor"
       }
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEU3NTJGNjU3QjI2RDkxQjUKUldTMWtXMnlWL1pTNXpWY2thTkFyNTVZTktxL25kbGVsUmJxbUZodS9PZmtkZTQ1OTZINno5NFAK",
+      "endpoints": [
+        "https://github.com/zeitgeist2004/Nook/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }

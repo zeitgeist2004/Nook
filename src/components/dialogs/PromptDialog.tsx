@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from '../../i18n';
+import { useDialogA11y } from '../../hooks/useDialogA11y';
 
 interface PromptDialogProps {
   isOpen: boolean;
@@ -15,12 +17,16 @@ export const PromptDialog: React.FC<PromptDialogProps> = ({
   title,
   initialValue = '',
   placeholder = '',
-  confirmLabel = 'Confirmar',
+  confirmLabel,
   onConfirm,
   onCancel,
 }) => {
+  const { t } = useTranslation();
+  const resolvedConfirmLabel = confirmLabel || t.common.confirm;
   const [value, setValue] = useState(initialValue);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useDialogA11y({ isOpen, onClose: onCancel });
 
   useEffect(() => {
     if (isOpen) {
@@ -52,14 +58,22 @@ export const PromptDialog: React.FC<PromptDialogProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        padding:
+          'max(16px, env(safe-area-inset-top, 16px)) 12px max(16px, env(safe-area-inset-bottom, 16px)) 12px',
+        boxSizing: 'border-box',
       }}
       onClick={onCancel}
     >
       <form
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: '380px',
+          width: 'min(92vw, 380px)',
+          maxHeight: 'min(85dvh, var(--nook-viewport-height, 85dvh), 420px)',
+          overflowY: 'auto',
           backgroundColor: 'var(--bg-elevated)',
           border: '1px solid var(--border-color)',
           borderRadius: 'var(--radius-lg)',
@@ -98,13 +112,13 @@ export const PromptDialog: React.FC<PromptDialogProps> = ({
             onClick={onCancel}
             className="btn-secondary"
           >
-            Cancelar
+            {t.common.cancel}
           </button>
           <button
             type="submit"
             className="btn-primary"
           >
-            {confirmLabel}
+            {resolvedConfirmLabel}
           </button>
         </div>
       </form>

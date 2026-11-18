@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '../../i18n';
 
 interface SplashScreenProps {
   onFinish: () => void;
 }
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
+  const { t } = useTranslation();
   const [isBlinking, setIsBlinking] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
-  const [statusText, setStatusText] = useState('Carregando suas notas...');
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     // 1. First discrete mascot wink at 780ms (reduced by 20% from 980ms)
@@ -24,7 +26,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
 
     // 3. Status text update at 1735ms (reduced by 20% from 2170ms)
     const statusTimer = setTimeout(() => {
-      setStatusText('Tudo pronto');
+      setIsReady(true);
     }, 1735);
 
     // 4. Initiate smooth fade-out exit at 1960ms (reduced by 20% from 2450ms)
@@ -63,7 +65,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
         position: 'fixed',
         inset: 0,
         width: '100vw',
-        height: '100vh',
+        height: 'var(--nook-viewport-height, 100vh)',
         zIndex: 999999,
         backgroundColor: '#0D0E11',
         display: 'flex',
@@ -104,7 +106,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
 
         <img
           src="/brand/mascot/nook-idle-blink.png"
-          alt="Nook Piscando"
+          alt={t.splash.winkAlt}
           style={{
             position: 'absolute',
             inset: 0,
@@ -177,7 +179,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
           transition: 'color 240ms ease, opacity 240ms ease',
         }}
       >
-        {statusText}
+        {isReady ? t.splash.ready : t.splash.loading}
       </div>
 
       <style>{`

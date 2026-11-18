@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Smartphone, Shield, Check, X } from 'lucide-react';
 import { PendingPairRequest } from '../../types';
 import { api } from '../../services/api';
+import { useTranslation } from '../../i18n';
+import { useDialogA11y } from '../../hooks/useDialogA11y';
 
 interface MobilePairApprovalDialogProps {
   request: PendingPairRequest | null;
@@ -14,8 +16,11 @@ export const MobilePairApprovalDialog: React.FC<MobilePairApprovalDialogProps> =
   onClose,
   onApproved,
 }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useDialogA11y({ isOpen: !!request, onClose });
 
   if (!request) return null;
 
@@ -28,7 +33,7 @@ export const MobilePairApprovalDialog: React.FC<MobilePairApprovalDialogProps> =
       onClose();
     } catch (err: any) {
       console.error('Failed to approve mobile pairing:', err);
-      setError(err?.message || 'Falha ao aprovar conexão');
+      setError(err?.message || t.mobile.approvalError);
       setLoading(false);
     }
   };
@@ -63,14 +68,17 @@ export const MobilePairApprovalDialog: React.FC<MobilePairApprovalDialogProps> =
       }}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={t.mobile.approvalTitle}
         style={{
-          width: '100%',
-          maxWidth: '440px',
+          width: 'min(94vw, 440px)',
+          maxHeight: 'min(90dvh, var(--nook-viewport-height, 90dvh))',
+          overflowY: 'auto',
           backgroundColor: 'var(--bg-elevated, #1A1C22)',
           border: '1px solid var(--border-color, #2D3039)',
           borderRadius: '16px',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05)',
-          overflow: 'hidden',
           animation: 'scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
         onClick={(e) => e.stopPropagation()}
@@ -112,7 +120,7 @@ export const MobilePairApprovalDialog: React.FC<MobilePairApprovalDialogProps> =
                 letterSpacing: '-0.01em',
               }}
             >
-              Pareamento Solicitado
+              {t.mobile.approvalTitle}
             </h3>
             <p
               style={{
@@ -121,7 +129,7 @@ export const MobilePairApprovalDialog: React.FC<MobilePairApprovalDialogProps> =
                 color: 'var(--text-secondary, #9CA3AF)',
               }}
             >
-              Um dispositivo deseja acessar suas anotações
+              {t.mobile.approvalSubtitle}
             </p>
           </div>
         </div>
@@ -141,7 +149,7 @@ export const MobilePairApprovalDialog: React.FC<MobilePairApprovalDialogProps> =
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: '12px', color: 'var(--text-muted, #6B7280)' }}>
-                Dispositivo
+                {t.mobile.approvalDevice}
               </span>
               <span
                 style={{
@@ -153,13 +161,13 @@ export const MobilePairApprovalDialog: React.FC<MobilePairApprovalDialogProps> =
                   gap: '6px',
                 }}
               >
-                {request.device_name || (isApple ? 'Apple iPhone' : isAndroid ? 'Android' : 'Celular')}
+                {request.device_name || (isApple ? 'Apple iPhone' : isAndroid ? 'Android' : t.mobile.pairingDefaultDevice)}
               </span>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: '12px', color: 'var(--text-muted, #6B7280)' }}>
-                Navegador
+                {t.mobile.approvalBrowser}
               </span>
               <span
                 style={{
@@ -173,13 +181,13 @@ export const MobilePairApprovalDialog: React.FC<MobilePairApprovalDialogProps> =
                 }}
                 title={request.user_agent}
               >
-                {request.user_agent ? request.user_agent.split(' ')[0] : 'Web Browser'}
+                {request.user_agent ? request.user_agent.split(' ')[0] : t.mobile.pairingWebBrowser}
               </span>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: '12px', color: 'var(--text-muted, #6B7280)' }}>
-                Código de Pareamento
+                {t.mobile.approvalPairCode}
               </span>
               <span
                 style={{
@@ -213,7 +221,7 @@ export const MobilePairApprovalDialog: React.FC<MobilePairApprovalDialogProps> =
           >
             <Shield size={16} style={{ color: '#F59E0B', flexShrink: 0, marginTop: '2px' }} />
             <p style={{ margin: 0, fontSize: '12px', lineHeight: 1.45, color: 'var(--text-secondary, #D1D5DB)' }}>
-              Permita apenas se foi você quem acabou de escanear o QR Code no seu celular.
+              {t.mobile.approvalWarning}
             </p>
           </div>
 
@@ -237,12 +245,13 @@ export const MobilePairApprovalDialog: React.FC<MobilePairApprovalDialogProps> =
         {/* Action Buttons */}
         <div
           style={{
-            padding: '14px 24px 20px',
+            padding: '14px 20px 18px',
             backgroundColor: 'var(--bg-main, #121316)',
             borderTop: '1px solid var(--border-subtle, rgba(255,255,255,0.06))',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-end',
+            flexWrap: 'wrap',
             gap: '10px',
           }}
         >
@@ -274,7 +283,7 @@ export const MobilePairApprovalDialog: React.FC<MobilePairApprovalDialogProps> =
             }}
           >
             <X size={15} />
-            <span>Recusar</span>
+            <span>{t.mobile.approvalReject}</span>
           </button>
 
           <button
@@ -304,7 +313,7 @@ export const MobilePairApprovalDialog: React.FC<MobilePairApprovalDialogProps> =
             }}
           >
             <Check size={16} />
-            <span>{loading ? 'Autorizando...' : 'Permitir Conexão'}</span>
+            <span>{loading ? t.mobile.approvalAuthorizing : t.mobile.approvalAllowConnection}</span>
           </button>
         </div>
       </div>

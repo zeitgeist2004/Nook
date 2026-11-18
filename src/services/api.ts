@@ -2,14 +2,25 @@ import { invoke } from '@tauri-apps/api/core';
 import {
   AuthorizedDevice,
   AutoBackupInfo,
+  AutoBackupSummary,
+  CacheStats,
+  ClearCacheResult,
   Collection,
+  DeleteBackupsResult,
+  FolderInspectionResult,
+  InstructionFileDetail,
+  InstructionFileSummary,
   MobileAccessInfo,
   Note,
   NoteSummary,
   NoteVersion,
   PendingPairRequest,
   SearchResultItem,
+  SkillDetail,
+  SkillSummary,
+  WriteInstructionResult,
 } from '../types';
+import { getTranslations } from '../i18n';
 
 export const isTauri = (): boolean => {
   return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
@@ -18,19 +29,27 @@ export const isTauri = (): boolean => {
 // ----------------------------------------------------------------------------
 // WEBSOCKET REAL-TIME SYNC CLIENT
 // ----------------------------------------------------------------------------
+export type ConnectionState = 'connected' | 'reconnecting' | 'disconnected' | 'unauthorized';
 type SyncListener = (event: string, data: any) => void;
 type StatusListener = (connected: boolean) => void;
+type ConnectionStateListener = (state: ConnectionState) => void;
 
 class NookSyncClient {
   private ws: WebSocket | null = null;
   private syncListeners: Set<SyncListener> = new Set();
   private statusListeners: Set<StatusListener> = new Set();
+  private stateListeners: Set<ConnectionStateListener> = new Set();
   private isConnected = false;
+  private connectionState: ConnectionState = 'reconnecting';
   private reconnectTimer: any = null;
+  private reconnectAttempts = 0;
+  private explicitWsUrl: string | undefined;
 
   constructor() {
     if (typeof window !== 'undefined') {
       if (isTauri()) {
+        this.connectionState = 'connected';
+        this.isConnected = true;
         // In Tauri Desktop, listen for live sync events emitted by Axum routes
         import('@tauri-apps/api/event')
           .then(({ listen }) => {
@@ -46,14 +65,67 @@ class NookSyncClient {
           })
           .catch((err) => console.warn('Could not attach Tauri sync listener:', err));
       } else {
-        // In Browser, connect to WebSocket
+        // In Browser, connect to WebSocket and resume on network/visibility recovery
         this.connect();
+        window.addEventListener('online', () => {
+          if (this.connectionState !== 'unauthorized') {
+            this.reconnectNow();
+          }
+        });
+        document.addEventListener('visibilitychange', () => {
+          if (
+            document.visibilityState === 'visible' &&
+            !this.isConnected &&
+            this.connectionState !== 'unauthorized'
+          ) {
+            this.reconnectNow();
+          }
+        });
       }
     }
   }
 
   get connected(): boolean {
     return this.isConnected;
+  }
+
+  get state(): ConnectionState {
+    return this.connectionState;
+  }
+
+  private setConnectionState(nextState: ConnectionState) {
+    const prevConnected = this.isConnected;
+    this.connectionState = nextState;
+    this.isConnected = nextState === 'connected';
+    if (prevConnected !== this.isConnected) {
+      this.statusListeners.forEach((cb) => cb(this.isConnected));
+    }
+    this.stateListeners.forEach((cb) => cb(nextState));
+  }
+
+  markUnauthorized() {
+    if (isTauri()) return;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+    if (this.ws) {
+      try {
+        this.ws.onclose = null;
+        this.ws.close();
+      } catch {
+        // Ignore close errors
+      }
+      this.ws = null;
+    }
+    this.setConnectionState('unauthorized');
+  }
+
+  markConnectedFromHttp() {
+    if (isTauri()) return;
+    if (this.connectionState === 'unauthorized' || this.connectionState === 'disconnected') {
+      this.reconnectNow();
+    }
   }
 
   onSync(listener: SyncListener): () => void {
@@ -67,8 +139,27 @@ class NookSyncClient {
     return () => this.statusListeners.delete(listener);
   }
 
+  onConnectionStateChange(listener: ConnectionStateListener): () => void {
+    this.stateListeners.add(listener);
+    listener(this.connectionState);
+    return () => this.stateListeners.delete(listener);
+  }
+
+  reconnectNow() {
+    if (typeof window === 'undefined' || isTauri()) return;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+    this.reconnectAttempts = 0;
+    this.setConnectionState('reconnecting');
+    this.connect(this.explicitWsUrl);
+  }
+
   connect(explicitUrl?: string) {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || isTauri()) return;
+    this.explicitWsUrl = explicitUrl;
+    if (this.connectionState === 'unauthorized') return;
     if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
       return;
     }
@@ -83,8 +174,8 @@ class NookSyncClient {
       this.ws = new WebSocket(url);
 
       this.ws.onopen = () => {
-        this.isConnected = true;
-        this.statusListeners.forEach((cb) => cb(true));
+        this.reconnectAttempts = 0;
+        this.setConnectionState('connected');
       };
 
       this.ws.onmessage = (msg) => {
@@ -100,9 +191,16 @@ class NookSyncClient {
         }
       };
 
-      this.ws.onclose = () => {
-        this.isConnected = false;
-        this.statusListeners.forEach((cb) => cb(false));
+      this.ws.onclose = (event) => {
+        this.ws = null;
+        if (this.connectionState === 'unauthorized') return;
+        // Policy violation / explicit auth close
+        if (event.code === 1008 || event.code === 4401 || event.code === 4403) {
+          this.setConnectionState('unauthorized');
+          return;
+        }
+        this.reconnectAttempts += 1;
+        this.setConnectionState(this.reconnectAttempts >= 3 ? 'disconnected' : 'reconnecting');
         this.scheduleReconnect(explicitUrl);
       };
 
@@ -114,16 +212,30 @@ class NookSyncClient {
         }
       };
     } catch {
+      this.reconnectAttempts += 1;
+      this.setConnectionState(this.reconnectAttempts >= 3 ? 'disconnected' : 'reconnecting');
       this.scheduleReconnect(explicitUrl);
     }
   }
 
   private scheduleReconnect(explicitUrl?: string) {
-    if (this.reconnectTimer) return;
+    if (this.reconnectTimer || this.connectionState === 'unauthorized') return;
+    // Bounded exponential backoff: 2.5s -> 5s -> 10s -> 15s (stops hammering on sustained offline)
+    const delay =
+      this.reconnectAttempts <= 2
+        ? 2500
+        : this.reconnectAttempts <= 4
+        ? 5000
+        : this.reconnectAttempts <= 6
+        ? 10000
+        : 15000;
+    if (this.reconnectAttempts > 10) {
+      return;
+    }
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
       this.connect(explicitUrl);
-    }, 2500);
+    }, delay);
   }
 }
 
@@ -140,9 +252,16 @@ async function fetchJson<T>(url: string, options: RequestInit = {}): Promise<T> 
     },
   });
 
+  if (res.status === 401 || res.status === 403) {
+    syncClient.markUnauthorized();
+    throw new Error(`HTTP Error ${res.status}: ${res.statusText}`);
+  }
+
   if (!res.ok) {
     throw new Error(`HTTP Error ${res.status}: ${res.statusText}`);
   }
+
+  syncClient.markConnectedFromHttp();
 
   const text = await res.text();
   if (!text || !text.trim()) {
@@ -163,6 +282,10 @@ export const api = {
   // Sync listener registration
   onSync: (listener: SyncListener) => syncClient.onSync(listener),
   onStatusChange: (listener: StatusListener) => syncClient.onStatusChange(listener),
+  onConnectionStateChange: (listener: ConnectionStateListener) =>
+    syncClient.onConnectionStateChange(listener),
+  reconnectSync: () => syncClient.reconnectNow(),
+  getConnectionState: () => syncClient.state,
   isWebConnected: () => syncClient.connected,
 
   // -------------------------------------------------------------
@@ -173,6 +296,17 @@ export const api = {
       return await invoke<string>('open_nook_web');
     }
     return window.location.href;
+  },
+
+  async openSponsorsPage(): Promise<void> {
+    const OFFICIAL_URL = 'https://github.com/sponsors/zeitgeist2004';
+    if (isTauri()) {
+      await invoke<string>('open_sponsors_page');
+      return;
+    }
+    if (typeof window !== 'undefined') {
+      window.open(OFFICIAL_URL, '_blank', 'noopener,noreferrer');
+    }
   },
 
   async restoreDesktopApp(): Promise<boolean> {
@@ -510,14 +644,14 @@ export const api = {
     if (isTauri()) {
       return await invoke('read_external_file', { filePath });
     }
-    throw new Error('Manipulação de arquivos do sistema operacional disponível apenas no app Desktop.');
+    throw new Error(getTranslations().apiErrors.externalFilesDesktopOnly);
   },
 
   async writeExternalFile(filePath: string, content: string): Promise<void> {
     if (isTauri()) {
       await invoke('write_external_file', { filePath, content });
     } else {
-      throw new Error('Manipulação de arquivos do sistema operacional disponível apenas no app Desktop.');
+      throw new Error(getTranslations().apiErrors.externalFilesDesktopOnly);
     }
   },
 
@@ -525,7 +659,7 @@ export const api = {
     if (isTauri()) {
       return await invoke<number>('export_library_to_folder', { destinationFolder });
     }
-    throw new Error('Exportação direta para pastas locais disponível no app Desktop.');
+    throw new Error(getTranslations().apiErrors.exportFolderDesktopOnly);
   },
 
   // -------------------------------------------------------------
@@ -535,7 +669,7 @@ export const api = {
     if (isTauri()) {
       return await invoke<string>('get_database_path');
     }
-    return 'SQLite Nativo (Loopback)';
+    return 'SQLite (Loopback)';
   },
 
   async exportBackupJson(filePath: string): Promise<void> {
@@ -543,14 +677,14 @@ export const api = {
       await invoke('export_backup_json', { filePath });
       return;
     }
-    throw new Error('Exportação de backup JSON disponível apenas no aplicativo Desktop.');
+    throw new Error(getTranslations().apiErrors.backupExportDesktopOnly);
   },
 
   async importBackupJson(filePath: string): Promise<string> {
     if (isTauri()) {
       return await invoke<string>('import_backup_json', { filePath });
     }
-    return 'Importação disponível no app Desktop.';
+    return getTranslations().apiErrors.backupImportDesktopOnly;
   },
 
   async triggerAutoBackup(force = false): Promise<AutoBackupInfo | null> {
@@ -565,6 +699,43 @@ export const api = {
       return await invoke<AutoBackupInfo[]>('list_auto_backups');
     }
     return [];
+  },
+
+  async getAutoBackupsSummary(): Promise<AutoBackupSummary | null> {
+    if (isTauri()) {
+      return await invoke<AutoBackupSummary>('get_auto_backups_summary');
+    }
+    return null;
+  },
+
+  async deleteAutoBackups(): Promise<DeleteBackupsResult> {
+    if (isTauri()) {
+      return await invoke<DeleteBackupsResult>('delete_auto_backups');
+    }
+    throw new Error(getTranslations().apiErrors.backupExportDesktopOnly);
+  },
+
+  async getCacheStats(): Promise<CacheStats | null> {
+    if (isTauri()) {
+      return await invoke<CacheStats>('get_cache_stats');
+    }
+    return null;
+  },
+
+  async clearAppCache(): Promise<ClearCacheResult> {
+    if (isTauri()) {
+      return await invoke<ClearCacheResult>('clear_app_cache');
+    }
+    throw new Error(getTranslations().apiErrors.backupExportDesktopOnly);
+  },
+
+  async getServerStatus(): Promise<{ status: string; version: string; build_id?: string } | null> {
+    if (isTauri()) return null;
+    try {
+      return await fetchJson<{ status: string; version: string; build_id?: string }>('/api/status');
+    } catch {
+      return null;
+    }
   },
 
   async getSettings(): Promise<Array<{ key: string; value: string }>> {
@@ -602,7 +773,7 @@ export const api = {
     if (isTauri()) {
       return await invoke<MobileAccessInfo>('start_mobile_access');
     }
-    throw new Error('Acesso mobile via túnel pode ser iniciado apenas no aplicativo desktop.');
+    throw new Error(getTranslations().apiErrors.mobileTunnelDesktopOnly);
   },
 
   async stopMobileAccess(): Promise<void> {
@@ -657,7 +828,7 @@ export const api = {
     if (isTauri()) {
       return await invoke<AuthorizedDevice>('approve_mobile_pairing', { requestId });
     }
-    throw new Error('Aprovação de pareamento disponível apenas no aplicativo desktop.');
+    throw new Error(getTranslations().apiErrors.pairApprovalDesktopOnly);
   },
 
   async rejectMobilePairing(requestId: string): Promise<void> {
@@ -710,5 +881,126 @@ export const api = {
     return await fetchJson<{ approved: boolean; pending?: boolean; session_token?: string; error?: string }>(
       `/api/mobile/pair/poll?request_id=${encodeURIComponent(requestId)}`
     );
+  },
+
+  // -------------------------------------------------------------
+  // DEVELOPER WORKFLOW (Desktop-Only Local Filesystem Commands)
+  // -------------------------------------------------------------
+  async inspectLinkedFolder(
+    folderPath: string,
+    extraSkillRoots?: string[]
+  ): Promise<FolderInspectionResult> {
+    if (isTauri()) {
+      return await invoke<FolderInspectionResult>('inspect_linked_folder', {
+        folderPath,
+        extraSkillRoots: extraSkillRoots ?? null,
+      });
+    }
+    return {
+      valid: false,
+      exists: false,
+      path: folderPath,
+      folder_name: '',
+      doc_files: [],
+      instruction_count: 0,
+      skill_count: 0,
+    };
+  },
+
+  async openLocalFolder(folderPath: string): Promise<void> {
+    if (isTauri()) {
+      await invoke('open_local_folder', { folderPath });
+    } else {
+      throw new Error(getTranslations().apiErrors.externalFilesDesktopOnly);
+    }
+  },
+
+  async revealLocalFile(filePath: string, allowedRoots?: string[]): Promise<void> {
+    if (isTauri()) {
+      await invoke('reveal_local_file', {
+        filePath,
+        allowedRoots: allowedRoots ?? null,
+      });
+    } else {
+      throw new Error(getTranslations().apiErrors.externalFilesDesktopOnly);
+    }
+  },
+
+  async listProjectInstructions(
+    linkedFolder: string | null,
+    customPaths: string[]
+  ): Promise<InstructionFileSummary[]> {
+    if (isTauri()) {
+      return await invoke<InstructionFileSummary[]>('list_project_instructions', {
+        linkedFolder,
+        customPaths,
+      });
+    }
+    return [];
+  },
+
+  async readProjectInstructionFile(
+    filePath: string,
+    allowedRoots: string[]
+  ): Promise<InstructionFileDetail> {
+    if (isTauri()) {
+      return await invoke<InstructionFileDetail>('read_project_instruction_file', {
+        filePath,
+        allowedRoots,
+      });
+    }
+    throw new Error(getTranslations().apiErrors.externalFilesDesktopOnly);
+  },
+
+  async writeProjectInstructionFile(
+    filePath: string,
+    content: string,
+    expectedHash: string,
+    forceOverwrite: boolean,
+    allowedRoots: string[]
+  ): Promise<WriteInstructionResult> {
+    if (isTauri()) {
+      return await invoke<WriteInstructionResult>('write_project_instruction_file', {
+        filePath,
+        content,
+        expectedHash,
+        forceOverwrite,
+        allowedRoots,
+      });
+    }
+    throw new Error(getTranslations().apiErrors.externalFilesDesktopOnly);
+  },
+
+  async listAgentSkills(
+    linkedFolder: string | null,
+    authorizedFolders: string[]
+  ): Promise<SkillSummary[]> {
+    if (isTauri()) {
+      return await invoke<SkillSummary[]>('list_agent_skills', {
+        linkedFolder,
+        authorizedFolders,
+      });
+    }
+    return [];
+  },
+
+  async readAgentSkillDetail(skillDir: string, allowedRoots: string[]): Promise<SkillDetail> {
+    if (isTauri()) {
+      return await invoke<SkillDetail>('read_agent_skill_detail', {
+        skillDir,
+        allowedRoots,
+      });
+    }
+    throw new Error(getTranslations().apiErrors.externalFilesDesktopOnly);
+  },
+
+  async readSkillReferenceFile(filePath: string, allowedRoots: string[]): Promise<string> {
+    if (isTauri()) {
+      return await invoke<string>('read_skill_reference_file', {
+        filePath,
+        allowedRoots,
+      });
+    }
+    throw new Error(getTranslations().apiErrors.externalFilesDesktopOnly);
   },
 };

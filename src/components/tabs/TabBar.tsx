@@ -3,6 +3,7 @@ import { X, Plus, FileText, FileCode, Pin, Globe, Monitor, Smartphone, Mic } fro
 import { TabItem } from '../../types';
 import { Tooltip } from '../ui/Tooltip';
 import { api, isTauri } from '../../services/api';
+import { useTranslation } from '../../i18n';
 
 interface TabBarProps {
   tabs: TabItem[];
@@ -27,6 +28,7 @@ const TabBarComponent: React.FC<TabBarProps> = ({
   isMobileActive = false,
   onOpenVoice,
 }) => {
+  const { t, format } = useTranslation();
   const isMaxReached = tabs.length >= maxTabs;
   const isDesktop = isTauri();
   const [webLaunching, setWebLaunching] = useState(false);
@@ -55,7 +57,7 @@ const TabBarComponent: React.FC<TabBarProps> = ({
       await api.openNookWeb();
     } catch (err) {
       console.error('Failed to open Nook Web:', err);
-      alert('Não foi possível iniciar o Nook Web. Verifique se o navegador padrão está disponível.');
+      alert(t.tabs.webStartError);
     } finally {
       setWebLaunching(false);
     }
@@ -78,7 +80,7 @@ const TabBarComponent: React.FC<TabBarProps> = ({
       }}
     >
       {/* Tabs List */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '3px', height: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '3px', height: '100%', minWidth: 0 }}>
         {tabs.map((tab) => {
           const isActive = tab.id === activeTabId;
           const isExternal = tab.type === 'external';
@@ -140,12 +142,14 @@ const TabBarComponent: React.FC<TabBarProps> = ({
                   fontSize: '12px',
                 }}
               >
-                {tab.title || 'Sem título'}
+                {tab.title || t.tabs.untitled}
               </span>
 
               {/* Close Button X */}
-              <Tooltip content="Fechar aba" position="bottom">
+              <Tooltip content={t.tabs.closeTab} position="bottom">
                 <button
+                  type="button"
+                  aria-label={t.tabs.closeTab}
                   onClick={(e) => {
                     e.stopPropagation();
                     onCloseTab(tab.id);
@@ -189,8 +193,8 @@ const TabBarComponent: React.FC<TabBarProps> = ({
       <Tooltip
         content={
           isMaxReached
-            ? `Limite máximo de ${maxTabs} abas atingido`
-            : 'Abrir arquivo Markdown (.md)'
+            ? format(t.tabs.maxTabsReached, { max: maxTabs })
+            : t.tabs.openExternalFile
         }
         shortcut={isMaxReached ? undefined : 'Ctrl+O'}
         position="bottom"
@@ -238,13 +242,13 @@ const TabBarComponent: React.FC<TabBarProps> = ({
 
       {/* Nook Web Action Button (Desktop) or Sync Pill (Browser) */}
       {isDesktop ? (
-        <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
           {onOpenMobile && (
             <Tooltip
               content={
                 isMobileActive
-                  ? 'Nook Mobile ativo (túnel conectado) — Clique para ver QR Code ou gerenciar'
-                  : 'Nook Mobile — Acessar suas notas pelo celular via Wi-Fi/5G'
+                  ? t.tabs.mobileActiveTooltip
+                  : t.tabs.mobileTooltip
               }
               position="bottom"
             >
@@ -286,7 +290,7 @@ const TabBarComponent: React.FC<TabBarProps> = ({
                 }}
               >
                 <Smartphone size={12} style={{ opacity: 0.85 }} />
-                <span>Mobile</span>
+                <span>{t.tabs.mobile}</span>
                 {isMobileActive && (
                   <span
                     style={{
@@ -303,7 +307,7 @@ const TabBarComponent: React.FC<TabBarProps> = ({
           )}
 
           {onOpenVoice && (
-            <Tooltip content="Criar nova nota por voz (Nook Voice)" position="bottom">
+            <Tooltip content={t.tabs.newVoiceNote} position="bottom">
               <button
                 onClick={onOpenVoice}
                 style={{
@@ -333,13 +337,13 @@ const TabBarComponent: React.FC<TabBarProps> = ({
                 }}
               >
                 <Mic size={12} style={{ opacity: 0.85 }} />
-                <span>Voz</span>
+                <span>{t.tabs.voice}</span>
               </button>
             </Tooltip>
           )}
 
           <Tooltip
-            content={webLaunching ? 'Iniciando Nook Web...' : 'Abrir o Nook no seu navegador?'}
+            content={webLaunching ? t.tabs.startingWeb : t.tabs.openInBrowserTooltip}
             position="bottom"
           >
             <button
@@ -382,9 +386,9 @@ const TabBarComponent: React.FC<TabBarProps> = ({
           </Tooltip>
         </div>
       ) : (
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginRight: '8px' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginRight: '8px', flexShrink: 0 }}>
           {onOpenVoice && (
-            <Tooltip content="Criar nova nota por voz (Nook Voice)" position="bottom">
+            <Tooltip content={t.tabs.newVoiceNote} position="bottom">
               <button
                 onClick={onOpenVoice}
                 style={{
@@ -414,13 +418,13 @@ const TabBarComponent: React.FC<TabBarProps> = ({
                 }}
               >
                 <Mic size={12} style={{ opacity: 0.85 }} />
-                <span>Voz</span>
+                <span>{t.tabs.voice}</span>
               </button>
             </Tooltip>
           )}
 
           <Tooltip
-            content="Restaurar e exibir a janela do Nook Desktop na sua tela"
+            content={t.tabs.restoreDesktopTooltip}
             position="bottom"
           >
             <button
@@ -452,15 +456,15 @@ const TabBarComponent: React.FC<TabBarProps> = ({
               }}
             >
               <Monitor size={12} style={{ opacity: 0.85 }} />
-              <span>{restoredNotice ? 'App Restaurado!' : 'Voltar ao App'}</span>
+              <span>{restoredNotice ? t.tabs.appRestored : t.tabs.backToApp}</span>
             </button>
           </Tooltip>
 
           <Tooltip
             content={
               webConnected
-                ? 'Nook Web conectado e sincronizado em tempo real com seu SQLite local'
-                : 'Conexão local perdida. Tentando reconectar com o Nook Desktop...'
+                ? t.tabs.webConnectedTooltip
+                : t.tabs.webDisconnectedTooltip
             }
             position="bottom"
           >
@@ -488,7 +492,7 @@ const TabBarComponent: React.FC<TabBarProps> = ({
                   boxShadow: webConnected ? '0 0 6px var(--accent, #00FF9D)' : 'none',
                 }}
               />
-              <span>{webConnected ? 'Conectado ao Desktop' : 'Reconectando...'}</span>
+              <span>{webConnected ? t.tabs.connectedToDesktop : t.tabs.reconnecting}</span>
             </div>
           </Tooltip>
         </div>
@@ -503,7 +507,7 @@ const TabBarComponent: React.FC<TabBarProps> = ({
           paddingRight: '6px',
         }}
       >
-        {tabs.length}/{maxTabs} abas
+        {format(t.tabs.tabCount, { count: tabs.length, max: maxTabs })}
       </div>
     </div>
   );

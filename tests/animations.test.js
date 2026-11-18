@@ -92,11 +92,14 @@ const contextMenuContent = fs.readFileSync(path.join(rootDir, 'src', 'components
 assert(contextMenuContent.includes('CopyPlus'), 'ContextMenu não contém CopyPlus para duplicar');
 console.log('✓ Teste 6: Botão de duplicar atualizado com o ícone semântico CopyPlus (sem Share2).');
 
+// Read central Portuguese i18n dictionary alongside components
+const ptLocaleSrc = fs.readFileSync(path.join(rootDir, 'src', 'i18n', 'locales', 'pt.ts'), 'utf8');
+
 // Test 7: Verify Non-Technical Version History Dialog
 const versionDialogContent = fs.readFileSync(path.join(rootDir, 'src', 'components', 'dialogs', 'VersionHistoryDialog.tsx'), 'utf8');
 assert(!versionDialogContent.toLowerCase().includes('snapshot'), 'VersionHistoryDialog ainda contém o termo técnico "snapshot"');
-assert(versionDialogContent.includes('Versões Anteriores'), 'Título humanizado "Versões Anteriores" ausente');
-assert(versionDialogContent.includes('Salvar Versão Atual'), 'Ação "Salvar Versão Atual" ausente');
+assert(versionDialogContent.includes('t.dialogs.versionTitle') && ptLocaleSrc.includes('Versões Anteriores'), 'Título humanizado "Versões Anteriores" ausente');
+assert(versionDialogContent.includes('t.dialogs.saveCurrentVersion') && ptLocaleSrc.includes('Salvar Versão Atual'), 'Ação "Salvar Versão Atual" ausente');
 console.log('✓ Teste 7: Tela de versões simplificada e humanizada sem jargões técnicos.');
 
 // Test 8: Verify Command Palette Hierarchical Organization
@@ -149,27 +152,29 @@ assert(tooltipComponent.includes('<kbd'), 'Renderizador de atalhos em badges <kb
 assert(cssContent.includes('@keyframes tooltipFade'), 'Keyframe GPU @keyframes tooltipFade ausente no globals.css');
 console.log('✓ Teste 12: Sistema de micro-tooltips com portal, detecção de colisão e aceleração GPU validado.');
 
-// Test 13: Verify Minimalist Onboarding & Starter Note Experience
+// Test 13: Verify Minimalist 3-Stage Multilingual Onboarding & Starter Note Experience
 const onboardingContent = fs.readFileSync(path.join(rootDir, 'src', 'components', 'onboarding', 'OnboardingModal.tsx'), 'utf8');
-assert(onboardingContent.includes('Escrita sem Fricção'), 'Pilar "Escrita sem Fricção" ausente no OnboardingModal');
-assert(onboardingContent.includes('Organização Fluida'), 'Pilar "Organização Fluida" ausente no OnboardingModal');
-assert(onboardingContent.includes('Foco no Teclado'), 'Pilar "Foco no Teclado" ausente no OnboardingModal');
+assert(onboardingContent.includes('WELCOME_SLIDES'), 'Carrossel multilíngue WELCOME_SLIDES ausente no OnboardingModal');
+assert(onboardingContent.includes('t.onboarding.quickNotesTitle') && ptLocaleSrc.includes('Notas rápidas'), 'Essencial "Notas rápidas" ausente no OnboardingModal');
+assert(onboardingContent.includes('t.onboarding.projectsTitle') && ptLocaleSrc.includes('Projetos'), 'Essencial "Projetos" ausente no OnboardingModal');
+assert(onboardingContent.includes('t.onboarding.searchTitle') && ptLocaleSrc.includes('Busca'), 'Essencial "Busca" ausente no OnboardingModal');
+assert(onboardingContent.includes('t.onboarding.startWritingCta'), 'Botão final startWritingCta ausente no OnboardingModal');
 assert(onboardingContent.includes("e.key === 'Escape'"), 'Atalho de teclado Escape ausente no OnboardingModal');
 assert(onboardingContent.includes("e.key === 'Enter'"), 'Atalho de teclado Enter ausente no OnboardingModal');
 
 const appContent = fs.readFileSync(path.join(rootDir, 'src', 'app', 'App.tsx'), 'utf8');
 assert(appContent.includes('handleOpenStarterNote'), 'Função handleOpenStarterNote ausente no App.tsx');
-assert(appContent.includes('Bem-vindo ao Nook'), 'Nota de introdução interativa ausente no App.tsx');
+assert(appContent.includes('starterNote.title') && ptLocaleSrc.includes('Bem-vindo ao Nook'), 'Nota de introdução interativa ausente no App.tsx');
 
 const editorContent = fs.readFileSync(path.join(rootDir, 'src', 'components', 'editor', 'Editor.tsx'), 'utf8');
-assert(editorContent.includes('Guia Rápido'), 'Ação "Guia Rápido" ausente no estado vazio do Editor');
+assert(editorContent.includes('t.editor.quickGuide') && ptLocaleSrc.includes('Guia Rápido'), 'Ação "Guia Rápido" ausente no estado vazio do Editor');
 assert(editorContent.includes('Tooltip'), 'Tooltips ausentes no estado vazio do Editor');
 console.log('✓ Teste 13: Onboarding minimalista, nota interativa e estado vazio intuitivo validados.');
 
 // Test 14: Verify Sidebar Folder Drag & Drop & Unobstructed Overlay Architecture
 const projectTreeContent = fs.readFileSync(path.join(rootDir, 'src', 'components', 'sidebar', 'ProjectTree.tsx'), 'utf8');
 assert(projectTreeContent.includes("e.dataTransfer.types?.includes('Files')"), 'Suporte a tipos Files do Windows ausente no ProjectTree');
-assert(projectTreeContent.includes('+ Soltar aqui'), 'Indicador visual de drop no projeto/pasta ausente');
+assert(projectTreeContent.includes('t.sidebar.dropHere') && ptLocaleSrc.includes('+ Soltar aqui'), 'Indicador visual de drop no projeto/pasta ausente');
 assert(projectTreeContent.includes('onImportFile'), 'Callback onImportFile ausente no ProjectTree');
 
 const sidebarContent = fs.readFileSync(path.join(rootDir, 'src', 'components', 'sidebar', 'Sidebar.tsx'), 'utf8');

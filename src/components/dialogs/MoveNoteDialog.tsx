@@ -1,6 +1,8 @@
 import React from 'react';
 import { Collection } from '../../types';
 import { Folder, Briefcase, FileText, X } from 'lucide-react';
+import { useTranslation } from '../../i18n';
+import { useDialogA11y } from '../../hooks/useDialogA11y';
 
 interface MoveNoteDialogProps {
   isOpen: boolean;
@@ -17,6 +19,8 @@ export const MoveNoteDialog: React.FC<MoveNoteDialogProps> = ({
   currentCollectionId,
   onSelectDestination,
 }) => {
+  const { t } = useTranslation();
+  useDialogA11y({ isOpen, onClose });
   if (!isOpen) return null;
 
   return (
@@ -30,14 +34,20 @@ export const MoveNoteDialog: React.FC<MoveNoteDialogProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        padding:
+          'max(16px, env(safe-area-inset-top, 16px)) 12px max(16px, env(safe-area-inset-bottom, 16px)) 12px',
+        boxSizing: 'border-box',
       }}
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={t.dialogs.moveTitle}
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: '400px',
-          maxHeight: '420px',
+          width: 'min(92vw, 400px)',
+          maxHeight: 'min(82dvh, 440px)',
           backgroundColor: 'var(--bg-elevated)',
           border: '1px solid var(--border-color)',
           borderRadius: 'var(--radius-lg)',
@@ -57,8 +67,8 @@ export const MoveNoteDialog: React.FC<MoveNoteDialogProps> = ({
             justifyContent: 'space-between',
           }}
         >
-          <span style={{ fontSize: '14px', fontWeight: 600 }}>Mover Nota Para...</span>
-          <button onClick={onClose} style={{ color: 'var(--text-muted)' }}>
+          <span style={{ fontSize: '14px', fontWeight: 600 }}>{t.dialogs.moveTitle}</span>
+          <button onClick={onClose} style={{ color: 'var(--text-muted)' }} aria-label={t.common.close}>
             <X size={16} />
           </button>
         </div>
@@ -95,7 +105,7 @@ export const MoveNoteDialog: React.FC<MoveNoteDialogProps> = ({
             className="move-option"
           >
             <FileText size={15} style={{ opacity: currentCollectionId === null ? 1 : 0.6 }} />
-            <span>Notas Rápidas (Sem pasta)</span>
+            <span>{t.dialogs.moveQuickNotes}</span>
           </div>
 
           <div style={{ height: '1px', backgroundColor: 'var(--border-subtle)', margin: '4px 0' }} />
