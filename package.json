@@ -1,0 +1,49 @@
+{
+  "name": "nook",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Nook — Bloco de notas minimalista e base de conhecimento local-first para Windows, Web e Mobile.",
+  "author": "zeitgeist2004",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zeitgeist2004/Nook.git"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "test": "node tests/suite.js && node tests/animations.test.js && node tests/web.test.js && node tests/mobile.test.js && node tests/voice.test.js && node tests/performance.test.js",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@codemirror/commands": "^6.8.0",
+    "@codemirror/lang-markdown": "^6.3.2",
+    "@codemirror/language": "^6.10.8",
+    "@codemirror/search": "^6.5.9",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.36.4",
+    "@tauri-apps/api": "^2.2.0",
+    "@tauri-apps/plugin-dialog": "^2.2.0",
+    "@tauri-apps/plugin-fs": "^2.2.0",
+    "@types/qrcode": "^1.5.6",
+    "clsx": "^2.1.1",
+    "dompurify": "^3.4.17",
+    "lucide-react": "^1.16.0",
+    "marked": "^18.2.0",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.2.7",
+    "@types/dompurify": "^3.0.5",
+    "@types/node": "^22.13.0",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.0"
+  }
+}

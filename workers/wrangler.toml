@@ -1,0 +1,17 @@
+name = "nook-mobile-provisioning"
+main = "provisioning-worker.ts"
+compatibility_date = "2026-11-01"
+
+[vars]
+BASE_DOMAIN = "remote.nookapp.io"
+
+# Cloudflare KV Namespace para controle de quotas, rate-limiting e catálogo de túneis
+[[kv_namespaces]]
+binding = "NOOK_PROVISIONING_KV"
+id = "nook_mobile_provisioning_kv_id"
+preview_id = "nook_mobile_provisioning_kv_preview_id"
+
+# Segredos a serem configurados com 'wrangler secret put':
+# - CF_ACCOUNT_ID
+# - CF_API_TOKEN
+# - CF_ZONE_ID

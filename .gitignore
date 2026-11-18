@@ -1,0 +1,36 @@
+# Dependencies & Build Outputs
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/gen/schemas/
+
+# Release & Sidecar Binaries (distributed via GitHub Releases)
+release/
+src-tauri/bin/*.exe
+
+# Local Databases, Backups & User Data
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+nook_auto_backup_*.json
+lumina_auto_backup_*.json
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+
+# Internal Tooling & Private Design Handoff
+.agents/
+skills-lock.json
+Nook_Identidade_Para_LLM/
+
+# OS & Editor Artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.log

@@ -1,0 +1,713 @@
+@import "./theme.css";
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Inputs & buttons base */
+input, textarea, button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  border: none;
+  outline: none;
+  background: transparent;
+}
+
+/* Accessible Keyboard Focus Indicators (WCAG AA & Web Interface Guidelines compliant) */
+:focus-visible {
+  outline: 2px solid var(--ring) !important;
+  outline-offset: 1px;
+}
+
+input:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--ring) !important;
+  outline-offset: 0;
+}
+
+button {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Keyboard Shortcut Badges */
+kbd, .kbd-shortcut {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-sm);
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  user-select: none;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
+}
+
+/* Shadcn Button Variants */
+.btn-primary {
+  background-color: var(--primary);
+  color: var(--primary-foreground) !important;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 12px;
+  border: 1px solid transparent;
+  transition: opacity var(--transition-fast), background-color var(--transition-fast);
+}
+
+.btn-primary:hover {
+  opacity: 0.92;
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  color: var(--secondary-foreground) !important;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 12px;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary) !important;
+  border-color: var(--text-muted);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  font-size: 12px;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.btn-ghost:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* Menu & Navigation Items */
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color var(--transition-fast);
+  background: transparent;
+}
+
+.menu-item:hover {
+  background-color: var(--bg-hover);
+}
+
+.menu-item.menu-item-danger {
+  color: var(--danger);
+}
+
+.menu-item.menu-item-danger:hover {
+  background-color: var(--danger-muted);
+}
+
+.tree-item:hover {
+  background-color: var(--bg-hover);
+}
+
+.quick-note-item:hover {
+  background-color: var(--bg-hover);
+}
+
+.move-option:hover {
+  background-color: var(--bg-hover);
+}
+
+/* CodeMirror custom styling (Dark Gray / Monochromatic) */
+.cm-editor {
+  height: 100% !important;
+  width: 100% !important;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  background-color: transparent !important;
+}
+
+.cm-editor.cm-focused {
+  outline: none !important;
+}
+
+.cm-scroller {
+  padding: 12px 0 60px 0 !important;
+  line-height: 1.65 !important;
+  font-family: inherit !important;
+  height: 100% !important;
+}
+
+.cm-content {
+  caret-color: var(--accent) !important;
+  padding: 0 40px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+.cm-line {
+  padding: 0 !important;
+  color: var(--text-primary);
+}
+
+.cm-gutters {
+  background-color: transparent !important;
+  border-right: 1px solid var(--border-subtle) !important;
+  color: var(--text-muted) !important;
+}
+
+.cm-activeLineGutter {
+  color: var(--text-primary) !important;
+  background-color: transparent !important;
+}
+
+.cm-activeLine {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+.cm-selectionBackground, ::selection {
+  background-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes tooltipFade {
+  from {
+    opacity: 0;
+    transform: translateY(2px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.98) translateY(6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 120ms ease-out forwards;
+}
+
+.animate-modal-pop {
+  animation: modalPop 140ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ==========================================================================
+   NOOK MASCOT MOTION & ANIMATION SYSTEM
+   Engineered with Emil Kowalski & Hyperframes standards:
+   - GPU-accelerated (composite-only: transform, opacity)
+   - Zero layout thrashing (no width/height/margin/padding changes)
+   - Strict sub-300ms budget for UI interactions
+   - @media (prefers-reduced-motion: reduce) compliant
+   ========================================================================== */
+
+/* 1. Idle Breathing & Float (Empty state) */
+@keyframes nookBreathe {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-nook-breathe {
+  animation: nookBreathe 3.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  will-change: transform;
+}
+
+/* 2. Welcome Wave (Onboarding) */
+@keyframes nookWave {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    transform: rotate(2.5deg) scale(1.02);
+  }
+  75% {
+    transform: rotate(-2.5deg) scale(1.02);
+  }
+}
+
+.animate-nook-wave {
+  animation: nookWave 2.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  transform-origin: bottom center;
+  will-change: transform;
+}
+
+/* 3. Pop-in Entrance (Modals, Toasts, Badges) */
+@keyframes nookPopIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-nook-pop {
+  animation: nookPopIn 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* 4. Micro-Wink Feedback (Save indicator) */
+@keyframes nookMicroWink {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-nook-wink {
+  animation: nookMicroWink 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform;
+}
+
+/* 5. Drop-Zone Pulse & Alert (Drag & Drop) */
+@keyframes nookDropPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.95;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 1;
+  }
+}
+
+.animate-nook-drop-pulse {
+  animation: nookDropPulse 2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  will-change: transform, opacity;
+}
+
+/* 6. Clean Sparkle Pulse (Trash Empty) */
+@keyframes nookZenClean {
+  0%, 100% {
+    transform: translateY(0);
+    filter: drop-shadow(0 4px 16px rgba(255, 255, 255, 0.04));
+  }
+  50% {
+    transform: translateY(-2px);
+    filter: drop-shadow(0 6px 20px rgba(255, 255, 255, 0.08));
+  }
+}
+
+.animate-nook-zen {
+  animation: nookZenClean 4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  will-change: transform;
+}
+
+/* 7. Reduced Motion Fallback (Accessibility hard requirement) */
+@media (prefers-reduced-motion: reduce) {
+  .animate-nook-breathe,
+  .animate-nook-wave,
+  .animate-nook-drop-pulse,
+  .animate-nook-zen,
+  .animate-nook-wink {
+    animation: none !important;
+    transform: none !important;
+  }
+  .animate-nook-pop {
+    animation: fadeIn 100ms ease-out forwards !important;
+  }
+}
+
+/* ==========================================================================
+   MARKDOWN READING VIEW (Minimalist Typography & Obsidian Extensions)
+   ========================================================================== */
+.markdown-reading-scroller {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+.markdown-body-rendered {
+  color: var(--text-primary);
+}
+
+.markdown-body-rendered h1,
+.markdown-body-rendered h2,
+.markdown-body-rendered h3,
+.markdown-body-rendered h4,
+.markdown-body-rendered h5,
+.markdown-body-rendered h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.markdown-body-rendered h1 {
+  font-size: 24px;
+  letter-spacing: -0.02em;
+  margin: 28px 0 14px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.markdown-body-rendered h2 {
+  font-size: 20px;
+  letter-spacing: -0.015em;
+  margin: 24px 0 12px 0;
+}
+
+.markdown-body-rendered h3 {
+  font-size: 16.5px;
+  letter-spacing: -0.01em;
+  margin: 20px 0 8px 0;
+}
+
+.markdown-body-rendered h4,
+.markdown-body-rendered h5,
+.markdown-body-rendered h6 {
+  font-size: 14.5px;
+  margin: 16px 0 6px 0;
+}
+
+.markdown-body-rendered p {
+  margin-bottom: 14px;
+  line-height: 1.7;
+}
+
+.markdown-body-rendered ul,
+.markdown-body-rendered ol {
+  padding-left: 24px;
+  margin-bottom: 14px;
+}
+
+.markdown-body-rendered li {
+  margin-bottom: 4px;
+  line-height: 1.65;
+}
+
+/* Task list checkboxes */
+.markdown-body-rendered ul:has(.nook-task-checkbox),
+.markdown-body-rendered ul:has(.lumina-task-checkbox) {
+  list-style: none;
+  padding-left: 2px;
+}
+
+.markdown-body-rendered li:has(.nook-task-checkbox),
+.markdown-body-rendered li:has(.lumina-task-checkbox) {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.nook-task-checkbox,
+.lumina-task-checkbox {
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: var(--accent);
+  position: relative;
+  top: 2px;
+}
+
+/* Links & Wikilinks */
+.markdown-body-rendered a.nook-link,
+.markdown-body-rendered a.lumina-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.markdown-body-rendered a.nook-wikilink,
+.markdown-body-rendered a.lumina-wikilink {
+  color: var(--text-primary);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--text-muted);
+  padding: 1px 2px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.markdown-body-rendered a.nook-wikilink:hover,
+.markdown-body-rendered a.lumina-wikilink:hover {
+  background-color: var(--bg-hover);
+  border-bottom-color: var(--text-primary);
+}
+
+/* Inline tags */
+.nook-tag,
+.lumina-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  margin: 0 2px;
+}
+
+/* Blockquotes */
+.markdown-body-rendered blockquote {
+  border-left: 3px solid var(--border-color);
+  padding: 4px 0 4px 16px;
+  color: var(--text-secondary);
+  margin: 14px 0;
+}
+
+/* Obsidian Callouts */
+.obsidian-callout {
+  margin: 16px 0;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-elevated);
+}
+
+.callout-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.callout-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.callout-tip .callout-indicator,
+.callout-success .callout-indicator {
+  background-color: var(--success);
+}
+
+.callout-warning .callout-indicator {
+  background-color: var(--warning);
+}
+
+.callout-danger .callout-indicator,
+.callout-bug .callout-indicator {
+  background-color: var(--danger);
+}
+
+.callout-body {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.callout-body p:last-child {
+  margin-bottom: 0;
+}
+
+/* Code & Code blocks */
+.markdown-body-rendered code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background-color: rgba(255, 255, 255, 0.06);
+  padding: 2px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+}
+
+.nook-code-wrapper,
+.lumina-code-wrapper {
+  position: relative;
+  margin: 16px 0;
+}
+
+.nook-code-wrapper pre,
+.lumina-code-wrapper pre {
+  background-color: var(--bg-elevated) !important;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.nook-code-wrapper pre code,
+.lumina-code-wrapper pre code {
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.nook-code-copy-btn,
+.lumina-code-copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.nook-code-copy-btn:hover,
+.lumina-code-copy-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+}
+
+.nook-code-copy-btn.copied,
+.lumina-code-copy-btn.copied {
+  color: var(--success);
+  border-color: var(--success);
+}
+
+/* Tables */
+.markdown-body-rendered table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 18px 0;
+  font-size: 13.5px;
+}
+
+.markdown-body-rendered th,
+.markdown-body-rendered td {
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.markdown-body-rendered th {
+  background-color: var(--bg-elevated);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.markdown-body-rendered tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.markdown-body-rendered hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 24px 0;
+}
+
+.markdown-body-rendered img {
+  max-width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  margin: 12px 0;
+}
+
+/* ==========================================================================
+   NOOK MOBILE — RESPONSIVE ADAPTATIONS & TOUCH INTERFACES (<= 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* Zero horizontal waste in editor */
+  .cm-content {
+    padding: 0 16px !important;
+  }
+  
+  .cm-scroller {
+    padding: 8px 0 32px 0 !important;
+  }
+  
+  /* Hide desktop keyboard shortcuts badges on phones */
+  kbd,
+  .kbd-shortcut,
+  .desktop-shortcut-badge {
+    display: none !important;
+  }
+
+  /* Touch-friendly interactive targets >= 44px */
+  button, 
+  [role="button"] {
+    min-height: 38px;
+  }
+
+  /* Safe areas at the bottom of the screen */
+  body, #root {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
