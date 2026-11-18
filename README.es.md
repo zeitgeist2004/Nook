@@ -32,14 +32,43 @@
 </p>
 
 <p>
-  <a href="#-descarga-e-instalación-windows">⬇️ Descargar EXE / Instalador</a> •
-  <a href="#-funciones-principales">✨ Funciones</a> •
-  <a href="#-recorrido-interactivo">🎨 Detalles</a> •
-  <a href="#-privacidad-y-arquitectura">🔒 Arquitectura</a> •
+  <a href="#-descarga-e-instalación-windows">⬇️ Descargar</a> •
+  <a href="#-captura-y-markdown-en-vista-dividida">✨ Markdown</a> •
+  <a href="#-cinco-temas-visuales">🎨 Temas</a> •
+  <a href="#-flujo-dev-y-agentes-de-ia">⚡ Flujo Dev</a> •
+  <a href="#-nook-web-mobile-y-voz">📱 Mobile y Voz</a> •
+  <a href="#-búsqueda-instantánea-y-backups-offline">🔍 Búsqueda y Backups</a> •
   <a href="#-compilar-desde-el-código-fuente">🛠️ Compilar</a>
 </p>
 
 </div>
+
+---
+
+## ✨ Captura y Markdown en Vista Dividida
+
+**Deja de perder ideas en decenas de `.txt` sueltos o esperar a que abran apps pesadas basadas en navegador solo para escribir una línea.**  
+Abre Nook y empieza al instante — sin cuentas, sin nube obligatoria y con velocidad nativa en Rust + SQLite.
+
+<p align="center">
+  <img src="./assets/showcase/en/01-capture-split-markdown.png" alt="Editor Markdown en vista dividida y árbol de proyectos en Nook Desktop" width="100%" />
+</p>
+
+- **Edición, Vista Dividida y Lectura en un clic (`Ctrl + E`):** Escribe Markdown en CodeMirror 6 mientras ves tablas, listas de tareas, citas, callouts y bloques de código renderizados en vivo al lado.
+- **Organización clara y sin ruido:** Mantén **Notas Rápidas** y notas fijadas siempre a mano, organiza proyectos en subcarpetas anidadas con drag & drop y trabaja en hasta **5 pestañas abiertas** al mismo tiempo.
+- **Auto-Save atómico en 350ms e historial:** Cada pulsación se guarda en SQLite local (`WAL`) con indicador **`Saved`** en tiempo real, recuperación tras cierres inesperados y versiones restaurables.
+- **Edición directa de archivos `.md` y `.txt` en Windows:** Clic derecho en cualquier archivo → **Abrir con Nook** para editar directo en disco (UTF-8, UTF-16 y Windows-1252).
+
+<details>
+<summary><b>📝 Sintaxis Markdown Completa (Callouts, Wikilinks, Checklists y Frontmatter)</b></summary>
+<br />
+
+- **Bloques Callout:** `> [!note]`, `> [!tip]`, `> [!warning]` e `> [!important]` con estilos limpios.
+- **Wikilinks `[[Nota]]`:** Conecta notas con `[[Nombre de Nota]]` o `[[Nota Destino|Texto]]` — haz clic en modo lectura para navegar o crear la nota al instante.
+- **Checklists interactivas:** Marca o desmarca `- [ ] Tarea` directamente en modo lectura actualizando el Markdown en tiempo real.
+- **Frontmatter YAML y etiquetas:** Metadatos al inicio (`---`) presentados en tarjeta limpia + soporte para `#tags`.
+
+</details>
 
 ---
 
@@ -54,55 +83,108 @@ Elige el formato que prefieras en **[GitHub Releases](https://github.com/zeitgei
 | **Versión Portátil (`.zip`)** | Extraer y usar sin instalar (incluye `Nook.exe`, `WebView2Loader.dll` y `cloudflared.exe`) | [![Descargar ZIP](https://img.shields.io/badge/Descargar-Nook--Portatil--Completo.zip-6B7280?style=flat-square&logo=files&logoColor=white)](https://github.com/zeitgeist2004/Nook/releases/latest) |
 | **Ejecutable Independiente (`.exe`)** | Ejecución directa de `Nook.exe` | [![Descargar EXE](https://img.shields.io/badge/Descargar-Nook.exe-18181B?style=flat-square&logo=windows&logoColor=white)](https://github.com/zeitgeist2004/Nook/releases/latest) |
 
----
-
-## ✨ Funciones Principales
-
-- **100% Offline y Local-First:** Sin cuentas, sin nube obligatoria y cero telemetría. Todo guardado en SQLite nativo (`WAL`).
-- **Editor CodeMirror 6 + Lector Markdown:** Modos **Editar**, **Dividir** y **Lectura** en un clic.
-- **Organización Fluida:** Proyectos, subcarpetas anidadas, **Notas Rápidas**, hasta 5 pestañas simultáneas, notas fijadas y reordenación arrastrando y soltando.
-- **Auto-Save e Historial de Versiones:** Guardado automático en 350ms, recuperación de borradores y versiones anteriores restaurables.
-- **Búsqueda Instantánea y Paleta de Comandos (`Ctrl + K`):** Búsqueda en tiempo real con SQLite **FTS5**.
-- **Flujo Dev para Agentes de IA (Opcional):** Crea un **Context Pack** en 1 clic, guarda **Plantillas de Prompts**, **Session Handoff**, **Diario de Proyecto**, vincula carpetas locales y consulta `CLAUDE.md`, `AGENTS.md` y skills (`SKILL.md`).
-- **Interfaz Multilingüe:** **English**, **Português (BR)** y **Español**.
-- **Copias de Seguridad y Actualizaciones Automáticas:** Backups programados en `.json`, exportación completa en `.md` y actualizaciones firmadas por GitHub Releases.
+> [!TIP]
+> ¿Quieres abrir archivos `.md` o `.txt` directamente con Nook? Haz clic derecho sobre el archivo → **Abrir con** → **Nook** → **Siempre**.
 
 ---
 
-## 🎨 Recorrido Interactivo
+## 🎨 Cinco Temas Visuales
+
+**Las pantallas blanco puro cansan la vista de noche, y los temas grises planos quitan las ganas de leer.**  
+Nook incluye cinco temas calibrados para largas sesiones de lectura y código — sincronizados entre **Desktop, Web y Mobile**.
+
+<p align="center">
+  <img src="./assets/showcase/en/02-themes-sakura-neon-light.png" alt="Cinco temas visuales de Nook: Claro, Neon y Sakura" width="100%" />
+</p>
+
+- **Sakura (`sakura`) y Neon (`neon`):** Atmósferas minimalistas exclusivas — tonos ciruela suaves con flores de cerezo `#E89EB8`, o estética terminal con trazos PCB y retícula verde `#00FF9D`.
+- **Claro (`white`), Oscuro (`dark`) y Gris (`gray`):** Papel cálido editorial (`#FAF9F6`) para leer de día, contraste profundo (`#090A0D`) para enfoque nocturno y grafito equilibrado como predeterminado.
+- **Interfaz Multilingüe Nativa:** Soporte completo en **English**, **Português (BR)** y **Español**, además de personalización tipográfica en el editor.
+
+---
+
+## ⚡ Flujo Dev y Agentes de IA
+
+**¿Cansado de buscar prompts antiguos, documentos dispersos y recordar dónde dejaste un proyecto antes de programar?**  
+Sin convertir tu bloc de notas en un IDE pesado, **Herramientas de Proyecto** prepara todo tu contexto en segundos.
+
+<p align="center">
+  <img src="./assets/showcase/en/03-dev-workflow-ai-agents.png" alt="Herramientas de proyecto y Context Pack en 1 clic en Nook" width="100%" />
+</p>
+
+- **Context Pack en 1 clic (`Prepare context`):** Selecciona notas y carpetas, ordena los documentos, previsualiza el Markdown unificado y copia o exporta el contexto completo con un clic.
+- **Continuidad entre sesiones:** Registra **Session Handoffs** (`Record progress`), mantén un **Diario de proyecto** y guarda **Plantillas de texto** reutilizables junto a tus notas.
+- **Carpeta local e instrucciones para agentes:** Vincula la carpeta local de un repositorio para consultar archivos `CLAUDE.md`, `AGENTS.md` y tu biblioteca local de skills (`SKILL.md`).
+
+---
+
+## 📱 Nook Web, Mobile y Voz
+
+**Captura una idea desde el celular o consulta tus notas desde otro navegador — sin subir tu biblioteca a ninguna nube de pago.**  
+Tu PC sigue siendo el único almacenamiento real mientras Nook sincroniza en vivo por red local o túnel cifrado.
+
+<p align="center">
+  <img src="./assets/showcase/en/04-nook-mobile-live-sync.png" alt="Nook Mobile con código QR vía Cloudflare Quick Tunnel y sincronización en vivo" width="100%" />
+</p>
+
+- **Emparejamiento por QR (`Cloudflare Quick Tunnel`):** Activa Nook Mobile, escanea el código QR desde la cámara del teléfono (código temporal de 5 minutos) y aprueba la conexión 2FA directamente en Windows.
+- **Control total de dispositivos:** Administra cada acceso bajo **Dispositivos Autorizados**, vincula el permiso a tu clave local de Windows y pulsa **Revocar** al instante cuando quieras cerrar una sesión.
+- **Nook Web (`127.0.0.1`) y Nook Voice:** Abre tu biblioteca desde el navegador local vía servidor Rust **Axum** con WebSockets en vivo, o dicta notas por voz con cola de recuperación sin conexión.
 
 <details>
-<summary><b>📝 1. Markdown Completo (Callouts, Wikilinks, Checklists y Frontmatter)</b></summary>
+<summary><b>🔐 Cómo funciona el emparejamiento seguro sin nube (Diagrama)</b></summary>
 <br />
 
-- **Callouts Formateados:** `> [!note]`, `> [!tip]`, `> [!warning]` e `> [!important]`.
-- **Wikilinks:** `[[Nombre de Nota]]` o `[[Nota Destino|Texto]]` — haz clic en modo lectura para navegar o crear la nota al instante.
-- **Checklists Interactivas:** Marca o desmarca `- [ ] Tarea` directamente en modo lectura actualizando el Markdown en vivo.
-- **Frontmatter YAML y Etiquetas:** Metadatos al inicio (`---`) mostrados en tarjetas limpias + soporte para `#tags`.
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Tú (PC)
+    participant Desktop as Nook Desktop (Rust + Axum)
+    participant CF as Cloudflare Quick Tunnel
+    actor Phone as Teléfono (Navegador)
+
+    User->>Desktop: Activar Nook Mobile
+    Desktop->>CF: Abrir túnel HTTPS cifrado
+    Desktop->>User: Mostrar QR + código válido por 5 min
+    User->>Phone: Escanear código QR
+    Phone->>Desktop: Solicitar acceso por túnel
+    Desktop->>User: Confirmar "¿Aprobar dispositivo?"
+    User->>Desktop: Aprobar en SQLite local
+    Desktop-->>Phone: Sesión HttpOnly + WebSocket en vivo
+```
+
+Consulta [docs/NOOK_MOBILE.md](./docs/NOOK_MOBILE.md) para ver el modelo completo de seguridad y protección contra DNS rebinding.
 
 </details>
 
+---
+
+## 🔍 Búsqueda Instantánea y Backups Offline
+
+**Tu espacio de notas debe seguir siendo instantáneo incluso con miles de archivos — y tus datos siempre deben ser tuyos en formatos abiertos.**
+
+<p align="center">
+  <img src="./assets/showcase/en/05-offline-backups-ctrl-k.png" alt="Paleta de comandos Ctrl+K y copias de seguridad automáticas en SQLite local" width="100%" />
+</p>
+
+- **Paleta de Comandos sin latencia (`Ctrl + K` / `Ctrl + P`):** Búsqueda de texto completo con SQLite **FTS5** — encuentra notas al vuelo, inicia **Nook Voice**, consulta versiones anteriores, abre archivos externos `.md`/`.txt` o gestiona la Papelera desde el teclado.
+- **Backups locales automáticos en `.json`:** Programa copias en segundo plano (**Cada 12 horas**, **Diariamente** o **Semanalmente**) con limpieza configurable (**7**, **14** o **30 días**) — los backups manuales y el historial de versiones nunca se borran automáticamente.
+- **Exportación completa en `.md` y actualizaciones firmadas:** Exporta toda tu biblioteca en carpetas `.md` estándar en cualquier momento y recibe actualizaciones firmadas mediante GitHub Releases.
+
 <details>
-<summary><b>🎨 2. Cinco Temas Visuales (Sincronizados entre Desktop, Web y Mobile)</b></summary>
+<summary><b>⌨️ Atajos de Teclado Esenciales</b></summary>
 <br />
 
-| Tema | Estilo | Destaque |
-| :--- | :--- | :--- |
-| **Gris (`gray`)** | Minimalismo grafito equilibrado | Predeterminado cómodo para largas sesiones |
-| **Oscuro (`dark`)** | Contraste profundo `#090A0D` | Enfoque nocturno sin fatiga visual |
-| **Claro (`white`)** | Papel cálido editorial `#FAF9F6` | Lectura nítida de día |
-| **Neon (`neon`)** | Terminal / Ciberseguridad | Fondo oscuro con circuitos PCB y retícula verde `#00FF9D` |
-| **Sakura (`sakura`)** | Jardín japonés minimalista | Tonos oscuros suaves con ramas y flores `#E89EB8` |
-
-</details>
-
-<details>
-<summary><b>📱 3. Nook Web, Nook Mobile y Nook Voice (Sincronización en Vivo)</b></summary>
-<br />
-
-- **Nook Web:** Accede a tu biblioteca en el navegador local (`127.0.0.1`) mediante el servidor Rust **Axum** integrado.
-- **Nook Mobile:** Activa el túnel seguro **Cloudflare Quick Tunnel**, escanea el **código QR** desde tu teléfono y aprueba la conexión 2FA directamente en tu PC.
-- **Nook Voice:** Dicta notas por voz en el navegador o celular con cola de recuperación sin conexión.
+| Atajo | Acción |
+| :--- | :--- |
+| `Ctrl + N` | Nueva nota rápida |
+| `Ctrl + Alt + N` | Captura rápida global (Windows) |
+| `Ctrl + K` o `Ctrl + P` | Búsqueda instantánea y paleta de comandos |
+| `Ctrl + E` | Alternar Editar / Dividir / Lectura |
+| `Ctrl + B` | Mostrar u ocultar barra lateral |
+| `Ctrl + S` | Guardar inmediatamente |
+| `Ctrl + ,` | Abrir Configuración |
+| `Ctrl + /` | Guía rápida de atajos |
 
 </details>
 
@@ -110,19 +192,37 @@ Elige el formato que prefieras en **[GitHub Releases](https://github.com/zeitgei
 
 ## 🔒 Privacidad y Arquitectura
 
-- **Core Desktop:** Tauri 2 + Rust (Edition 2024)
-- **Base de Datos:** SQLite local (`WAL` + `FTS5`)
-- **Frontend:** React 18 + TypeScript + Vite
-- **Editor y Vista Previa:** CodeMirror 6 + `marked` + `DOMPurify`
+| Capa | Tecnología |
+| :--- | :--- |
+| **Core Desktop** | Tauri 2 + Rust (Edition 2024) |
+| **Base de Datos** | SQLite local (`WAL` + `FTS5` + claves foráneas) |
+| **Frontend** | React 18 + TypeScript + Vite |
+| **Editor y Vista Previa** | CodeMirror 6 + `marked` + `DOMPurify` |
+| **Sync y Túnel** | Servidor Axum HTTP/WebSocket integrado + Cloudflare Quick Tunnel opcional |
+
+- Cero cuentas, cero analíticas, cero telemetría de terceros.
+- Todas tus notas, copias de seguridad y ajustes permanecen en tu computadora.
 
 ---
 
 ## 🛠️ Compilar desde el Código Fuente
 
+### Requisitos
+- **Node.js >= 18** y **npm**
+- **Rust >= 1.90** (`rustup` / `cargo`) y requisitos de Tauri en Windows (WebView2 + MSVC Build Tools)
+
 ```bash
+# 1. Instalar dependencias del frontend
 npm install
+
+# 2. Ejecutar suite de pruebas y verificación de tipos
 npm test
 npx tsc --noEmit
+
+# 3. Iniciar modo desarrollo de escritorio
+npm run tauri dev
+
+# 4. Compilar ejecutable final e instaladores de Windows
 npm run tauri build
 ```
 
@@ -130,7 +230,8 @@ npm run tauri build
 
 ## ❤️ Apoyar a Nook
 
-Nook es 100% gratuito y de código abierto. Si te ayuda en tu día a día, puedes apoyar el desarrollo en **[GitHub Sponsors](https://github.com/sponsors/zeitgeist2004)**.
+Nook es 100% gratuito y de código abierto — sin muros de pago, sin anuncios y sin funciones Pro bloqueadas.  
+Si te ayuda en tu día a día, puedes apoyar el desarrollo en **[GitHub Sponsors](https://github.com/sponsors/zeitgeist2004)**.
 
 <div align="center">
   <br />

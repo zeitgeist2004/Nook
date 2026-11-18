@@ -32,10 +32,12 @@
 </p>
 
 <p>
-  <a href="#-download--install-windows">⬇️ Download EXE / Installer</a> •
-  <a href="#-key-features">✨ Features</a> •
-  <a href="#-interactive-feature-tour">🎨 Deep Dive</a> •
-  <a href="#-privacy--architecture">🔒 Architecture</a> •
+  <a href="#-download--install-windows">⬇️ Download</a> •
+  <a href="#-capture--split-markdown">✨ Markdown</a> •
+  <a href="#-five-crafted-themes">🎨 Themes</a> •
+  <a href="#-developer-workflow--ai-continuity">⚡ Dev Workflow</a> •
+  <a href="#-nook-web-mobile--voice">📱 Mobile & Voice</a> •
+  <a href="#-instant-command-palette--offline-backups">🔍 Search & Backups</a> •
   <a href="#-build-from-source">🛠️ Build</a>
 </p>
 
@@ -43,69 +45,95 @@
 
 ---
 
+## ✨ Capture & Split Markdown
+
+**Stop losing ideas in scattered `.txt` files or waiting on heavy browser wrappers just to jot down a line.**  
+Open Nook and write immediately — zero accounts, zero mandatory cloud, and native Rust + SQLite speed.
+
+<p align="center">
+  <img src="./assets/showcase/en/01-capture-split-markdown.png" alt="Nook Desktop Split Markdown Editor and Project Sidebar" width="100%" />
+</p>
+
+- **Edit, Split, or Read in One Click (`Ctrl + E`):** Write raw Markdown in CodeMirror 6 while inspecting formatted tables, checklists, blockquotes, callouts, and code blocks live side by side.
+- **Calm Workspace Structure:** Keep **Quick Notes** and pinned items at the top, organize projects into nested folders with smooth drag-and-drop, and work across up to **5 simultaneous tabs**.
+- **Atomic 350ms Auto-Save & Crash Recovery:** Every keystroke persists safely to local SQLite (`WAL` mode) with a live **`Saved`** status badge and restorable edit history.
+- **Native Windows `.md` & `.txt` Editing:** Right-click any external file in Explorer → **Open with Nook** to edit safely on disk (UTF-8, UTF-16, and Windows-1252).
+
+<details>
+<summary><b>📝 Supported Markdown Syntax (Callouts, Wikilinks, Checklists & YAML Frontmatter)</b></summary>
+<br />
+
+- **Callout Blocks:** `> [!note]`, `> [!tip]`, `> [!warning]`, and `> [!important]` rendered with clean visual accents.
+- **Instant `[[Wikilinks]]`:** Link across notes with `[[Note Name]]` or `[[Target Note|Custom Label]]` — click in Read mode to jump straight there or create the target note on the spot.
+- **Live Interactive Checklists:** Toggle `- [ ] Task` items directly in Read mode while keeping your underlying Markdown in sync.
+- **YAML Frontmatter & Inline Tags:** Structured metadata cards (`---`) and `#tags` parsed cleanly without cluttering your prose.
+
+</details>
+
+---
+
 ## ⬇️ Download & Install (Windows)
 
-Pick your preferred format from **[GitHub Releases](https://github.com/zeitgeist2004/Nook/releases/latest)**:
+Grab the latest release straight from **[GitHub Releases](https://github.com/zeitgeist2004/Nook/releases/latest)**:
 
 | Format | Best For | Direct Download |
 | :--- | :--- | :--- |
-| **`.exe` Installer (NSIS)** | Standard Windows installation with shortcuts, `.md` / `.txt` file associations, and built-in auto-updates *(Recommended)* | [![Download Setup EXE](https://img.shields.io/badge/Download-Nook--1.0.0--Setup.exe-00C875?style=flat-square&logo=windows&logoColor=white)](https://github.com/zeitgeist2004/Nook/releases/latest) |
+| **`.exe` Installer (NSIS)** | Standard Windows install with shortcuts, `.md` / `.txt` associations, and built-in auto-updates *(Recommended)* | [![Download Setup EXE](https://img.shields.io/badge/Download-Nook--1.0.0--Setup.exe-00C875?style=flat-square&logo=windows&logoColor=white)](https://github.com/zeitgeist2004/Nook/releases/latest) |
 | **`.msi` Installer (Windows Installer)** | Enterprise / standard x64 Windows Installer package | [![Download MSI](https://img.shields.io/badge/Download-Nook--1.0.0--x64.msi-0078D6?style=flat-square&logo=windows&logoColor=white)](https://github.com/zeitgeist2004/Nook/releases/latest) |
-| **Portable `.zip`** | Extract and run anywhere without installing (includes `Nook.exe`, `WebView2Loader.dll`, and `cloudflared.exe` for Nook Mobile) | [![Download ZIP](https://img.shields.io/badge/Download-Nook--Portatil--Completo.zip-6B7280?style=flat-square&logo=files&logoColor=white)](https://github.com/zeitgeist2004/Nook/releases/latest) |
-| **Standalone `.exe`** | Direct launch of the compiled `Nook.exe` binary | [![Download EXE](https://img.shields.io/badge/Download-Nook.exe-18181B?style=flat-square&logo=windows&logoColor=white)](https://github.com/zeitgeist2004/Nook/releases/latest) |
+| **Portable `.zip`** | Extract and launch anywhere without installing (includes `Nook.exe`, `WebView2Loader.dll`, and `cloudflared.exe` for Nook Mobile) | [![Download ZIP](https://img.shields.io/badge/Download-Nook--Portatil--Completo.zip-6B7280?style=flat-square&logo=files&logoColor=white)](https://github.com/zeitgeist2004/Nook/releases/latest) |
+| **Standalone `.exe`** | Direct single-binary launch (`Nook.exe`) | [![Download EXE](https://img.shields.io/badge/Download-Nook.exe-18181B?style=flat-square&logo=windows&logoColor=white)](https://github.com/zeitgeist2004/Nook/releases/latest) |
 
 > [!TIP]
-> Want to open any `.md` or `.txt` file on Windows directly with Nook? Right-click any Markdown or text file → **Open with** → **Nook** → **Always**. Edits save safely back to disk with UTF-8, UTF-16, and Windows-1252 support.
+> Want Nook as your fast default Markdown viewer on Windows? Right-click any `.md` or `.txt` file → **Open with** → **Nook** → **Always**.
 
 ---
 
-## ✨ Key Features
+## 🎨 Five Crafted Themes
 
-- **100% Offline & Local-First:** Zero accounts, zero mandatory cloud, zero telemetry. Everything lives in native SQLite (`PRAGMA journal_mode = WAL`).
-- **CodeMirror 6 Editor + Markdown Reader:** Switch cleanly between **Edit**, **Split**, and **Read** modes in one click.
-- **Calm Project Organization:** Projects, nested subfolders with cycle protection, **Quick Notes**, multi-tabs (up to 5 open tabs), pinned notes, and smooth drag-and-drop sidebar sorting.
-- **Smart Auto-Save & Version History:** 350ms debounced writes, crash-recovery drafts, and restorable note snapshots.
-- **Instant Search & Command Palette (`Ctrl + K`):** Real-time SQLite **FTS5** full-text search and keyboard-driven actions.
-- **Developer Workflow (Optional):** Build a 1-click **Context Pack**, manage reusable **Prompt Templates**, write **Session Handoffs** and **Dev Journals**, link local project folders, and read local `CLAUDE.md` / `AGENTS.md` instructions and `SKILL.md` skills — without turning your notes app into an IDE.
-- **Multilingual Interface:** Full native support for **English**, **Português (BR)**, and **Español**.
-- **Automatic Local Backups & Updates:** Configurable automatic `.json` backups (12h / daily / weekly with 7–30 day retention), full `.md` folder export, and signed auto-updates via GitHub Releases.
+**Harsh pure-white screens strain your eyes at night, while lifeless gray templates kill focus.**  
+Nook pairs five purpose-built themes calibrated for long reading and coding sessions — synced seamlessly across **Desktop, Web, and Mobile**.
+
+<p align="center">
+  <img src="./assets/showcase/en/02-themes-sakura-neon-light.png" alt="Nook Visual Themes Showcase: Light, Neon, and Sakura" width="100%" />
+</p>
+
+- **Sakura (`sakura`) & Neon (`neon`):** Signature minimalist atmospheres — soft plum tones framed with `#E89EB8` five-petal cherry blossoms, or crisp terminal contrast with `#00FF9D` PCB traces and subtle grid backdrops.
+- **Light (`white`), Dark (`dark`), & Gray (`gray`):** Warm editorial paper (`#FAF9F6`) for sunlit desks, deep dark contrast (`#090A0D`) for late-night focus, and balanced graphite as a calm daily default.
+- **Built-In Accessibility & Multilingual UI:** Full native interface in **English**, **Português (BR)**, and **Español**, plus customizable editor font families and spacing.
 
 ---
 
-## 🎨 Interactive Feature Tour
+## ⚡ Developer Workflow & AI Continuity
+
+**Tired of hunting down prompts, docs, and where you left off yesterday before starting a coding session?**  
+Without turning your notes app into a bloated IDE, **Project Tools** keeps every project organized and AI-ready in seconds.
+
+<p align="center">
+  <img src="./assets/showcase/en/03-dev-workflow-ai-agents.png" alt="Nook Project Tools and 1-Click Context Pack Builder" width="100%" />
+</p>
+
+- **1-Click Context Pack (`Prepare context`):** Select notes and folders, drag or reorder document flow, preview combined Markdown, and export or copy a structured workspace brief with one click.
+- **Continuity Without Friction:** Capture end-of-day **Session Handoffs** (`Record progress`), keep a running **Project journal**, and store reusable **Text templates** right next to your notes.
+- **Local Folder & Agent File Reader:** Link a repository folder on disk to browse project instructions (`CLAUDE.md`, `AGENTS.md`) and inspect your local **Skills library** (`SKILL.md`) right inside Nook.
+
+---
+
+## 📱 Nook Web, Mobile & Voice
+
+**Need to capture a thought on the move or browse your notes from another room — without handing your library to a cloud subscription?**  
+Your PC remains the single source of truth while Nook serves live access over your local network or an encrypted tunnel.
+
+<p align="center">
+  <img src="./assets/showcase/en/04-nook-mobile-live-sync.png" alt="Nook Mobile QR Pairing via Cloudflare Quick Tunnel and Live Sync" width="100%" />
+</p>
+
+- **Instant QR Pairing (`Cloudflare Quick Tunnel`):** Enable Nook Mobile, point your phone camera at the QR code (with a 5-minute single-use code), and approve 2FA authorization right on Windows.
+- **Full Device Control:** See active paired devices under **Authorized Devices**, lock access to your local key, and hit **Revoke** anytime to sever a session immediately.
+- **Nook Web (`127.0.0.1`) & Nook Voice:** Open your notes in a desktop browser through the embedded **Rust Axum** server with real-time WebSocket updates, or dictate voice notes hands-free with offline queue recovery.
 
 <details>
-<summary><b>📝 1. Rich Markdown Engine (Callouts, Wikilinks, Checklists & Frontmatter)</b></summary>
+<summary><b>🔐 How Zero-Cloud QR Pairing Works (Architecture Diagram)</b></summary>
 <br />
-
-- **Formatted Callouts:** `> [!note]`, `> [!tip]`, `> [!warning]`, and `> [!important]` rendered with clean visual accents.
-- **Wikilinks:** `[[Note Name]]` or `[[Target Note|Custom Label]]` — click in Read mode to jump straight to a note or create it on the spot.
-- **Interactive Checklists:** `- [ ] Task` — toggle checkboxes directly in Read mode while updating Markdown live.
-- **YAML Frontmatter & Tags:** Top-of-file metadata (`---`) displayed cleanly alongside inline `#tags`.
-
-</details>
-
-<details>
-<summary><b>🎨 2. Five Crafted Themes (Synced Across Desktop, Web & Mobile)</b></summary>
-<br />
-
-| Theme | Aesthetic | Highlight |
-| :--- | :--- | :--- |
-| **Gray (`gray`)** | Balanced graphite minimalism | Comfortable default for long writing sessions |
-| **Dark (`dark`)** | Deep OLED contrast | Pure dark surfaces `#090A0D` for night focus |
-| **Light (`white`)** | Warm editorial paper `#FAF9F6` | Crisp daytime readability |
-| **Neon (`neon`)** | Cybersecurity / Terminal | Deep charcoal with `#00FF9D` PCB & grid accents |
-| **Sakura (`sakura`)** | Minimalist Japanese garden | Soft plum tones with `#E89EB8` five-petal cherry blossoms |
-
-</details>
-
-<details>
-<summary><b>📱 3. Nook Web, Nook Mobile & Nook Voice (Live Local Sync)</b></summary>
-<br />
-
-- **Nook Web:** Open your library in a desktop browser (`127.0.0.1`) via Nook's embedded Rust **Axum** server with DNS-rebinding protection, `HttpOnly` sessions, and real-time WebSockets.
-- **Nook Mobile (Wi-Fi & 5G):** Toggle **Cloudflare Quick Tunnel** (`cloudflared`), scan the **QR Code** from your phone, and approve 2FA pairing right on your PC. Your notes never leave your machine's storage.
-- **Nook Voice:** Dictate quick notes or meeting transcripts directly from Mobile or Web with offline recovery queuing.
 
 ```mermaid
 sequenceDiagram
@@ -125,10 +153,26 @@ sequenceDiagram
     Desktop-->>Phone: HttpOnly session + live WebSocket sync
 ```
 
+See [docs/NOOK_MOBILE.md](./docs/NOOK_MOBILE.md) for the complete pairing security model and DNS-rebinding protections.
+
 </details>
 
+---
+
+## 🔍 Instant Command Palette & Offline Backups
+
+**Your workspace should stay lightning fast after thousands of notes — and never hold your data hostage in proprietary formats.**
+
+<p align="center">
+  <img src="./assets/showcase/en/05-offline-backups-ctrl-k.png" alt="Nook Ctrl+K Command Palette and Local SQLite Automatic Backups" width="100%" />
+</p>
+
+- **Zero-Latency Command Palette (`Ctrl + K` / `Ctrl + P`):** Powered by SQLite **FTS5** full-text search — filter notes, create Voice or Quick Notes, jump into previous versions, open external `.md` / `.txt` files, or manage Trash without touching the mouse.
+- **Automated Local `.json` Backups:** Schedule consistent background snapshots (**Every 12 hours**, **Daily**, or **Weekly**) with automatic retention cleanup (**7**, **14**, or **30 days**) — manual backups and version history are never purged.
+- **Full `.md` Folder Export & Signed Updates:** Export your entire library cleanly as portable `.md` files anytime, and stay current with optional cryptographic auto-updates via GitHub Releases.
+
 <details>
-<summary><b>⌨️ 4. Keyboard Shortcuts</b></summary>
+<summary><b>⌨️ Essential Keyboard Shortcuts</b></summary>
 <br />
 
 | Shortcut | Action |
@@ -158,7 +202,6 @@ sequenceDiagram
 
 - Zero accounts, zero analytics, zero third-party telemetry.
 - All notes, backups, and settings live locally on your computer.
-- See [docs/NOOK_MOBILE.md](./docs/NOOK_MOBILE.md) for the complete mobile pairing security model.
 
 ---
 
